@@ -870,6 +870,7 @@ async def get_site_settings():
             "id": "default",
             "site_name": "Aréna",
             "site_logo": None,
+            "site_logo_size": 32,
             "hero_title": "Sport, Koncertek, Élmények",
             "hero_subtitle": "A város multifunkcionális sport- és rendezvényközpontja, 5000 fő férőhellyel",
             "hero_image": None,
@@ -878,6 +879,9 @@ async def get_site_settings():
         }
         await db.site_settings.insert_one(default_settings)
         return SiteSettingsResponse(**default_settings)
+    # Ensure site_logo_size has a default
+    if "site_logo_size" not in settings:
+        settings["site_logo_size"] = 32
     return SiteSettingsResponse(**settings)
 
 @api_router.put("/admin/settings", response_model=SiteSettingsResponse)
