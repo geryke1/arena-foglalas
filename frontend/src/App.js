@@ -33,7 +33,11 @@ import {
   UserCog,
   BookOpen,
   Home as HomeIcon,
-  ArrowLeft
+  ArrowLeft,
+  Settings,
+  Upload,
+  Image,
+  Key
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
