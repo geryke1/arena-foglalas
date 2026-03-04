@@ -690,8 +690,8 @@ const EventDetailsPage = () => {
         </div>
       </div>
 
-      {/* Booking Modal */}
-      {showBookingModal && (
+      {/* Booking Modal - only for guests */}
+      {showBookingModal && !user && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowBookingModal(false)}>
           <Card className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <CardHeader>
@@ -700,6 +700,17 @@ const EventDetailsPage = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleGuestBooking} className="space-y-4">
+                {/* Auto account info */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                  <div className="flex items-start gap-2">
+                    <Mail className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Automatikus fiók létrehozás</p>
+                      <p className="text-blue-600 mt-1">A foglalással automatikusan létrehozunk számodra egy felhasználói fiókot. A belépési jelszót emailben küldjük el. Bejelentkezés után kezelheted a foglalásaidat.</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="guest_name">Név *</Label>
                   <Input 
