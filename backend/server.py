@@ -683,6 +683,77 @@ async def init_admin():
     await db.users.insert_one(admin_doc)
     return MessageResponse(message="Admin létrehozva: admin@arena.hu / admin123")
 
+# ==================== PROFILE UPDATE ====================
+
+@api_router.put("/auth/profile", response_model=UserResponse)
+async def update_profile(profile_data: ProfileUpdate, user: dict = Depends(get_current_user)):
+    update_data = {}
+    
+    # Update name
+    if profile_data.name:
+        update_data["name"] = profile_data.name
+    
+    # Update phone
+    if profile_data.phone is not None:
+        update_data["phone"] = profile_data.phone
+    
+    # Update email
+    if profile_data.email and profile_data.email != user["email"]:
+        existing = await db.users.find_one({"email": profile_data.email})
+        if existing:
+            raise HTTPException(status_code=400, detail="Ez az email már foglalt")
+        update_data["email"] = profile_data.email
+    
+    # Update password
+    if profile_data.new_password:
+        if not profile_data.current_password:
+            raise HTTPException(status_code=400, detail="Jelenlegi jelszó szükséges")
+        if not verify_password(profile_data.current_password, user["password"]):
+            raise HTTPException(status_code=400, detail="Hibás jelenlegi jelszó")
+        update_data["password"] = hash_password(profile_data.new_password)
+    
+    if update_data:
+        await db.users.update_one({"id": user["id"]}, {"$set": update_data})
+    
+    updated = await db.users.find_one({"id": user["id"]}, {"_id": 0, "password": 0})
+    return UserResponse(**updated)
+
+# ==================== SITE SETTINGS ====================
+
+@api_router.get("/settings", response_model=SiteSettingsResponse)
+async def get_site_settings():
+    settings = await db.site_settings.find_one({}, {"_id": 0})
+    if not settings:
+        # Return defaults
+        default_settings = {
+            "id": "default",
+            "site_name": "Aréna",
+            "site_logo": None,
+            "hero_title": "Sport, Koncertek, Élmények",
+            "hero_subtitle": "A város multifunkcionális sport- és rendezvényközpontja, 5000 fő férőhellyel",
+            "hero_image": None,
+            "footer_text": "© 2024 Aréna Sport- és Rendezvényközpont. Minden jog fenntartva.",
+            "footer_logo": None
+        }
+        await db.site_settings.insert_one(default_settings)
+        return SiteSettingsResponse(**default_settings)
+    return SiteSettingsResponse(**settings)
+
+@api_router.put("/admin/settings", response_model=SiteSettingsResponse)
+async def update_site_settings(settings_data: SiteSettings, user: dict = Depends(get_super_admin)):
+    settings = await db.site_settings.find_one({})
+    
+    update_data = settings_data.model_dump()
+    
+    if settings:
+        await db.site_settings.update_one({}, {"$set": update_data})
+    else:
+        update_data["id"] = "default"
+        await db.site_settings.insert_one(update_data)
+    
+    updated = await db.site_settings.find_one({}, {"_id": 0})
+    return SiteSettingsResponse(**updated)
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
