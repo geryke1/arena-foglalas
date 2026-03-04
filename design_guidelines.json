@@ -1,0 +1,110 @@
+{
+  "design_system": {
+    "typography": {
+      "font_family": {
+        "heading": "Manrope, sans-serif",
+        "body": "Inter, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "scale": {
+        "h1": "text-4xl md:text-6xl font-bold tracking-tight",
+        "h2": "text-3xl md:text-4xl font-bold tracking-tight",
+        "h3": "text-2xl font-semibold tracking-tight",
+        "body_large": "text-lg leading-relaxed",
+        "body_default": "text-base leading-relaxed",
+        "caption": "text-sm text-muted-foreground"
+      }
+    },
+    "colors": {
+      "theme": "light",
+      "palette": {
+        "primary": {
+          "DEFAULT": "#2563EB",
+          "foreground": "#FFFFFF",
+          "description": "Electric Blue - Energy and Trust"
+        },
+        "secondary": {
+          "DEFAULT": "#F97316",
+          "foreground": "#FFFFFF",
+          "description": "Vibrant Orange - Action and Excitement"
+        },
+        "background": {
+          "DEFAULT": "#FFFFFF",
+          "subtle": "#F8FAFC",
+          "paper": "#FFFFFF"
+        },
+        "foreground": {
+          "DEFAULT": "#0F172A",
+          "muted": "#64748B"
+        },
+        "border": "#E2E8F0",
+        "success": "#10B981",
+        "warning": "#F59E0B",
+        "error": "#EF4444"
+      }
+    },
+    "spacing": {
+      "container_padding": "p-4 md:p-8 lg:p-12",
+      "section_gap": "gap-8 md:gap-12",
+      "component_gap": "gap-4"
+    },
+    "radius": {
+      "default": "rounded-lg",
+      "button": "rounded-full",
+      "card": "rounded-xl"
+    },
+    "shadows": {
+      "card": "shadow-sm hover:shadow-md transition-shadow duration-200",
+      "dropdown": "shadow-lg border border-border/50",
+      "button": "shadow-sm hover:shadow-md"
+    }
+  },
+  "layout_strategies": {
+    "marketing": {
+      "hero": "Full-width background image with dark overlay (bg-black/40) and centered white text. High impact.",
+      "grid": "Bento grid for sports categories. Asymmetric layouts to create visual interest.",
+      "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+    },
+    "dashboard": {
+      "structure": "Sidebar navigation (fixed left) + Main Content Area (scrollable).",
+      "cards": "Clean white cards with subtle borders for stats and lists.",
+      "tables": "Dense data tables with clear headers and row hover effects."
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-3 font-semibold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full px-6 py-2 font-medium",
+      "outline": "border-2 border-primary text-primary hover:bg-primary/5 rounded-full px-6 py-2 font-medium"
+    },
+    "cards": {
+      "event": "bg-card border border-border/50 rounded-xl overflow-hidden hover:shadow-lg transition-all group",
+      "stat": "bg-white p-6 rounded-xl border border-border shadow-sm"
+    },
+    "inputs": {
+      "default": "h-11 rounded-lg border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    }
+  },
+  "assets": {
+    "images": {
+      "hero_bg": "https://images.unsplash.com/photo-1761823473903-cabb1ac05527?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBzcG9ydHMlMjBhcmVuYSUyMGV4dGVyaW9yJTIwc3VubnklMjBkYXl8ZW58MHx8fHwxNzcyNjM5Nzc1fDA&ixlib=rb-4.1.0&q=85",
+      "basketball": "https://images.unsplash.com/photo-1768842407056-6c64fe629c2e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTZ8MHwxfHNlYXJjaHwxfHxwZW9wbGUlMjBwbGF5aW5nJTIwYmFza2V0YmFsbCUyMGluZG9vciUyMGNvdXJ0fGVufDB8fHx8MTc3MjYzOTc3OXww&ixlib=rb-4.1.0&q=85",
+      "yoga": "https://images.unsplash.com/photo-1764661441867-473a59a765bc?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwxfHx5b2dhJTIwY2xhc3MlMjBncm91cCUyMGluZG9vcnxlbnwwfHx8fDE3NzI2Mzk3ODJ8MA&ixlib=rb-4.1.0&q=85",
+      "swimming": "https://images.unsplash.com/photo-1730244548329-4ae2f4fcaa7c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1Mjh8MHwxfHNlYXJjaHwxfHxzd2ltbWluZyUyMHBvb2wlMjBpbmRvb3IlMjBjb21wZXRpdGlvbnxlbnwwfHx8fDE3NzI2Mzk3ODZ8MA&ixlib=rb-4.1.0&q=85",
+      "placeholder_event": "https://images.unsplash.com/photo-1761823533593-b7ee1d292202?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBzcG9ydHMlMjBhcmVuYSUyMGV4dGVyaW9yJTIwc3VubnklMjBkYXl8ZW58MHx8fHwxNzcyNjM5Nzc1fDA&ixlib=rb-4.1.0&q=85"
+    },
+    "icons": "Use lucide-react for all icons. Examples: Calendar, MapPin, Users, Trophy, Activity."
+  },
+  "universal_guidelines": [
+    "Use 'Manrope' for all headings to give a modern, sporty feel.",
+    "Ensure high contrast for text. Use Slate-900 for main text and Slate-500 for secondary text.",
+    "Buttons should be pill-shaped (rounded-full) for a friendly, modern look.",
+    "Use generous padding (p-8, p-12) to create a sense of space and luxury.",
+    "Interactive elements must have hover states (transform, shadow, color change).",
+    "All forms must use Shadcn UI components (Input, Select, Form, Button).",
+    "Do not use gradients for text. Keep it clean and legible.",
+    "Use 'sonner' for toast notifications.",
+    "Add 'data-testid' to all interactive elements for testing."
+  ],
+  "instructions_to_main_agent": "You are building a Hungarian sports center booking system. The design should be clean, light, and energetic. Use the provided image URLs for the respective sections. Implement the Admin and Subadmin dashboards with a focus on data clarity (tables, stats). The public facing pages (Home, Events) should be visually engaging with large images and clear typography. STRICTLY follow the color palette and typography defined here."
+}
