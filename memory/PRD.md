@@ -41,6 +41,12 @@ Multifunkcionális sport- és rendezvényközpont online foglalási rendszere, a
   - Telefonszám (opcionális)
 - ✅ **SMTP email konfiguráció** - Beállítva: mail.taurus-systems.cloud
 
+### V1.3 (2025.03.04) - Kiegészítések
+- ✅ **Végleges törlés** - Lemondott foglalások végleges törlése az adatbázisból
+  - Megerősítő modal a véletlen törlés elkerülésére
+  - Backend: `DELETE /api/admin/bookings/{id}/permanent`
+  - Csak lemondott foglalások törölhetők véglegesen
+
 ## Architektúra
 - **Backend**: FastAPI (Python)
 - **Frontend**: React + Tailwind CSS + Shadcn/UI
