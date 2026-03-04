@@ -132,23 +132,36 @@ const LoadingScreen = () => (
 // Home Page
 const HomePage = () => {
   const [sports, setSports] = useState([]);
+  const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
   useEffect(() => {
-    fetchSports();
+    fetchData();
   }, []);
 
-  const fetchSports = async () => {
+  const fetchData = async () => {
     try {
-      const res = await axios.get(`${API}/sports`);
-      setSports(res.data);
+      const [sportsRes, settingsRes] = await Promise.all([
+        axios.get(`${API}/sports`),
+        axios.get(`${API}/settings`)
+      ]);
+      setSports(sportsRes.data);
+      setSettings(settingsRes.data);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
   };
+
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${BACKEND_URL}${url}`;
+  };
+
+  const defaultHeroImage = 'https://images.unsplash.com/photo-1761823473903-cabb1ac05527?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBzcG9ydHMlMjBhcmVuYSUyMGV4dGVyaW9yJTIwc3VubnklMjBkYXl8ZW58MHx8fHwxNzcyNjM5Nzc1fDA&ixlib=rb-4.1.0&q=85';
 
   return (
     <div className="min-h-screen bg-white">
@@ -157,8 +170,14 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2">
-              <Trophy className="h-8 w-8 text-[#2563EB]" />
-              <span className="font-bold text-xl text-slate-900" style={{fontFamily: 'Manrope'}}>Aréna</span>
+              {settings?.site_logo ? (
+                <img src={getImageUrl(settings.site_logo)} alt="Logo" className="h-8 w-8 object-contain" />
+              ) : (
+                <Trophy className="h-8 w-8 text-[#2563EB]" />
+              )}
+              <span className="font-bold text-xl text-slate-900" style={{fontFamily: 'Manrope'}}>
+                {settings?.site_name || 'Aréna'}
+              </span>
             </Link>
             <div className="flex items-center gap-4">
               {user ? (
@@ -199,7 +218,7 @@ const HomePage = () => {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1761823473903-cabb1ac05527?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBzcG9ydHMlMjBhcmVuYSUyMGV4dGVyaW9yJTIwc3VubnklMjBkYXl8ZW58MHx8fHwxNzcyNjM5Nzc1fDA&ixlib=rb-4.1.0&q=85')`
+            backgroundImage: `url('${getImageUrl(settings?.hero_image) || defaultHeroImage}')`
           }}
         />
         <div className="absolute inset-0 hero-overlay" />
@@ -208,10 +227,10 @@ const HomePage = () => {
             className="text-4xl md:text-6xl font-bold mb-6 animate-fadeIn"
             style={{fontFamily: 'Manrope'}}
           >
-            Sport, Koncertek, Élmények
+            {settings?.hero_title || 'Sport, Koncertek, Élmények'}
           </h1>
           <p className="text-lg md:text-xl text-white/90 mb-8 animate-fadeIn stagger-1">
-            A város multifunkcionális sport- és rendezvényközpontja, 5000 fő férőhellyel
+            {settings?.hero_subtitle || 'A város multifunkcionális sport- és rendezvényközpontja, 5000 fő férőhellyel'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeIn stagger-2">
             <a href="#sports">
@@ -256,7 +275,7 @@ const HomePage = () => {
                   >
                     <div className="relative h-48 overflow-hidden">
                       <img 
-                        src={sport.image_url || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBzcG9ydHMlMjBhcmVuYSUyMGV4dGVyaW9yJTIwc3VubnklMjBkYXl8ZW58MHx8fHwxNzcyNjM5Nzc1fDA&ixlib=rb-4.1.0&q=85'}
+                        src={getImageUrl(sport.image_url) || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBzcG9ydHMlMjBhcmVuYSUyMGV4dGVyaW9yJTIwc3VubnklMjBkYXl8ZW58MHx8fHwxNzcyNjM5Nzc1fDA&ixlib=rb-4.1.0&q=85'}
                         alt={sport.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
@@ -288,10 +307,18 @@ const HomePage = () => {
       <footer className="bg-slate-900 text-white py-12 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Trophy className="h-8 w-8 text-[#2563EB]" />
-            <span className="font-bold text-2xl" style={{fontFamily: 'Manrope'}}>Aréna</span>
+            {settings?.footer_logo ? (
+              <img src={getImageUrl(settings.footer_logo)} alt="Footer Logo" className="h-8 w-8 object-contain" />
+            ) : (
+              <Trophy className="h-8 w-8 text-[#2563EB]" />
+            )}
+            <span className="font-bold text-2xl" style={{fontFamily: 'Manrope'}}>
+              {settings?.site_name || 'Aréna'}
+            </span>
           </div>
-          <p className="text-slate-400">© 2024 Aréna Sport- és Rendezvényközpont. Minden jog fenntartva.</p>
+          <p className="text-slate-400">
+            {settings?.footer_text || '© 2024 Aréna Sport- és Rendezvényközpont. Minden jog fenntartva.'}
+          </p>
         </div>
       </footer>
     </div>
