@@ -968,10 +968,13 @@ const AdminLayout = ({ children }) => {
     { icon: CalendarDays, label: 'Események', path: '/admin/events' },
     { icon: UserCog, label: 'Subadminok', path: '/admin/subadmins' },
     { icon: BookOpen, label: 'Foglalások', path: '/admin/bookings' },
+    { icon: Settings, label: 'Beállítások', path: '/admin/settings' },
+    { icon: User, label: 'Profilom', path: '/admin/profile' },
   ] : [
     { icon: LayoutDashboard, label: 'Áttekintés', path: '/admin' },
     { icon: CalendarDays, label: 'Események', path: '/admin/events' },
     { icon: BookOpen, label: 'Foglalások', path: '/admin/bookings' },
+    { icon: User, label: 'Profilom', path: '/admin/profile' },
   ];
 
   return (
