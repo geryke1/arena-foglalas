@@ -2296,6 +2296,40 @@ const AdminSettingsPage = () => {
                   )}
                 </div>
               </div>
+              
+              {/* Logo Size Slider */}
+              {settings.site_logo && (
+                <div className="space-y-3 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <Label>Logó méret</Label>
+                    <span className="text-sm font-medium text-slate-600">{settings.site_logo_size || 32}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="24"
+                    max="120"
+                    value={settings.site_logo_size || 32}
+                    onChange={(e) => setSettings({...settings, site_logo_size: parseInt(e.target.value)})}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#2563EB]"
+                    data-testid="settings-logo-size"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>24px</span>
+                    <span>120px</span>
+                  </div>
+                  <div className="bg-slate-100 rounded-lg p-4 flex items-center justify-center">
+                    <div className="bg-black rounded-lg px-4 py-2 flex items-center gap-2">
+                      <img 
+                        src={getImageUrl(settings.site_logo)} 
+                        alt="Logo preview" 
+                        style={{ height: `${settings.site_logo_size || 32}px` }}
+                        className="object-contain"
+                      />
+                      <span className="text-white font-bold">{settings.site_name || 'Aréna'}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
