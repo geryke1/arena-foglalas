@@ -461,6 +461,72 @@ async def delete_event(event_id: str, user: dict = Depends(get_admin_user)):
 
 # ==================== BOOKING ROUTES ====================
 
+@api_router.post("/bookings/guest", response_model=BookingResponse)
+async def create_guest_booking(booking_data: GuestBookingCreate):
+    """Create booking for guest users (no login required)"""
+    event = await db.events.find_one({"id": booking_data.event_id}, {"_id": 0})
+    if not event:
+        raise HTTPException(status_code=404, detail="Esemény nem található")
+    
+    # Check capacity
+    current_bookings = await db.bookings.count_documents({"event_id": booking_data.event_id, "status": "active"})
+    if current_bookings >= event["max_capacity"]:
+        raise HTTPException(status_code=400, detail="Az esemény betelt")
+    
+    # Check if email already booked this event
+    existing = await db.bookings.find_one({
+        "event_id": booking_data.event_id, 
+        "user_email": booking_data.guest_email,
+        "status": "active"
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Ezzel az email címmel már van foglalás erre az eseményre")
+    
+    sport = await db.sports.find_one({"id": event["sport_id"]}, {"_id": 0})
+    
+    booking_id = str(uuid.uuid4())
+    booking_doc = {
+        "id": booking_id,
+        "event_id": booking_data.event_id,
+        "user_id": f"guest_{booking_id}",
+        "user_name": booking_data.guest_name,
+        "user_email": booking_data.guest_email,
+        "user_phone": booking_data.guest_phone,
+        "event_name": event["name"],
+        "event_date": event["event_date"],
+        "sport_id": event["sport_id"],
+        "sport_name": sport["name"] if sport else "Ismeretlen",
+        "status": "active",
+        "is_guest": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.bookings.insert_one(booking_doc)
+    
+    # Send confirmation email
+    send_email(
+        booking_data.guest_email,
+        f"Foglalás megerősítve - {event['name']}",
+        f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #2563EB;">Kedves {booking_data.guest_name}!</h2>
+            <p>Foglalásod sikeresen rögzítettük a következő eseményre:</p>
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p><strong>Esemény:</strong> {event['name']}</p>
+                <p><strong>Sport:</strong> {sport['name'] if sport else 'N/A'}</p>
+                <p><strong>Időpont:</strong> {event['event_date']}</p>
+                <p><strong>Foglalási azonosító:</strong> {booking_id}</p>
+            </div>
+            <p>Várunk szeretettel!</p>
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+            <p style="color: #64748b; font-size: 12px;">Ez egy automatikus üzenet, kérjük ne válaszolj rá.</p>
+        </body>
+        </html>
+        """
+    )
+    
+    return BookingResponse(**booking_doc)
+
 @api_router.post("/bookings", response_model=BookingResponse)
 async def create_booking(booking_data: BookingCreate, user: dict = Depends(get_current_user)):
     event = await db.events.find_one({"id": booking_data.event_id}, {"_id": 0})
