@@ -2613,6 +2613,185 @@ const AdminProfilePage = () => {
   );
 };
 
+// ==================== USER PROFILE PAGE (for regular users) ====================
+
+const UserProfilePage = () => {
+  const { user, refreshUser, logout } = useAuth();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    current_password: '',
+    new_password: '',
+    confirm_password: ''
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || ''
+      }));
+    }
+  }, [user]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (formData.new_password && formData.new_password !== formData.confirm_password) {
+      toast.error("Az új jelszavak nem egyeznek");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const updateData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone
+      };
+      
+      if (formData.new_password) {
+        updateData.current_password = formData.current_password;
+        updateData.new_password = formData.new_password;
+      }
+
+      await axios.put(`${API}/auth/profile`, updateData);
+      toast.success("Profil frissítve");
+      
+      if (formData.email !== user.email) {
+        toast.info("Az email cím megváltozott, kérjük jelentkezz be újra");
+        logout();
+        navigate('/login');
+      } else {
+        await refreshUser();
+        setFormData(prev => ({
+          ...prev,
+          current_password: '',
+          new_password: '',
+          confirm_password: ''
+        }));
+      }
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Hiba történt");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <Header />
+      <div className="max-w-2xl mx-auto px-4 py-12 pt-24">
+        <div className="flex items-center gap-4 mb-8">
+          <Link to="/" className="text-slate-500 hover:text-slate-700">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900" style={{fontFamily: 'Manrope'}}>Profilom</h1>
+            <p className="text-slate-500 mt-1">Szerkeszd a fiókod adatait</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Személyes adatok
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Név</Label>
+                <Input 
+                  value={formData.name} 
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
+                  data-testid="user-profile-name-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input 
+                  type="email"
+                  value={formData.email} 
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  required
+                  data-testid="user-profile-email-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Telefonszám</Label>
+                <Input 
+                  type="tel"
+                  value={formData.phone} 
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  placeholder="+36 30 123 4567"
+                  data-testid="user-profile-phone-input"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                Jelszó módosítása
+              </CardTitle>
+              <CardDescription>Hagyd üresen ha nem szeretnéd módosítani</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Jelenlegi jelszó</Label>
+                <Input 
+                  type="password"
+                  value={formData.current_password} 
+                  onChange={(e) => setFormData({...formData, current_password: e.target.value})}
+                  data-testid="user-profile-current-password-input"
+                />
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Új jelszó</Label>
+                  <Input 
+                    type="password"
+                    value={formData.new_password} 
+                    onChange={(e) => setFormData({...formData, new_password: e.target.value})}
+                    minLength={6}
+                    data-testid="user-profile-new-password-input"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Új jelszó megerősítése</Label>
+                  <Input 
+                    type="password"
+                    value={formData.confirm_password} 
+                    onChange={(e) => setFormData({...formData, confirm_password: e.target.value})}
+                    minLength={6}
+                    data-testid="user-profile-confirm-password-input"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end">
+            <Button type="submit" className="btn-primary" disabled={saving} data-testid="user-profile-save-btn">
+              {saving ? 'Mentés...' : 'Profil mentése'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // ==================== MAIN APP ====================
 
 function App() {
