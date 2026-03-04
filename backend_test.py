@@ -321,6 +321,64 @@ class ArenaBookingAPITester:
         else:
             return self.log_test("Get Subadmins", False, f"Status: {status}, Response: {response}", 200, status)
 
+    def test_guest_booking_create(self):
+        """Test creating a guest booking (no auth required)"""
+        if not self.created_event_id:
+            return self.log_test("Guest Booking Create", False, "No event created")
+        
+        timestamp = datetime.now().strftime("%H%M%S")
+        guest_booking_data = {
+            "event_id": self.created_event_id,
+            "guest_name": f"Guest User {timestamp}",
+            "guest_email": f"guest{timestamp}@test.hu",
+            "guest_phone": "+36301234569"
+        }
+        
+        success, status, response = self.make_request('POST', 'bookings/guest', guest_booking_data, expected_status=200)
+        
+        if success and 'id' in response:
+            return self.log_test("Guest Booking Create", True, f"Guest booking created: {response['event_name']} for {response['user_name']}")
+        else:
+            return self.log_test("Guest Booking Create", False, f"Status: {status}, Response: {response}", 200, status)
+
+    def test_guest_booking_required_fields(self):
+        """Test guest booking with missing required fields"""
+        if not self.created_event_id:
+            return self.log_test("Guest Booking Required Fields", False, "No event created")
+        
+        # Test missing guest_name
+        guest_booking_data = {
+            "event_id": self.created_event_id,
+            "guest_email": "test@test.hu"
+        }
+        
+        success, status, response = self.make_request('POST', 'bookings/guest', guest_booking_data, expected_status=422)
+        
+        if success:
+            return self.log_test("Guest Booking Required Fields", True, "Correctly rejected booking without guest_name")
+        else:
+            return self.log_test("Guest Booking Required Fields", False, f"Should reject missing guest_name. Status: {status}", 422, status)
+
+    def test_guest_booking_optional_phone(self):
+        """Test guest booking without optional phone field"""
+        if not self.created_event_id:
+            return self.log_test("Guest Booking Optional Phone", False, "No event created")
+        
+        timestamp = datetime.now().strftime("%H%M%S")
+        guest_booking_data = {
+            "event_id": self.created_event_id,
+            "guest_name": f"Guest No Phone {timestamp}",
+            "guest_email": f"guestnophone{timestamp}@test.hu"
+            # No guest_phone field
+        }
+        
+        success, status, response = self.make_request('POST', 'bookings/guest', guest_booking_data, expected_status=200)
+        
+        if success and 'id' in response:
+            return self.log_test("Guest Booking Optional Phone", True, f"Guest booking created without phone: {response['user_name']}")
+        else:
+            return self.log_test("Guest Booking Optional Phone", False, f"Status: {status}, Response: {response}", 200, status)
+
     def test_cancel_booking(self):
         """Test canceling a booking"""
         if not self.user_token or not self.created_booking_id:
