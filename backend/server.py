@@ -461,9 +461,17 @@ async def delete_event(event_id: str, user: dict = Depends(get_admin_user)):
 
 # ==================== BOOKING ROUTES ====================
 
+import secrets
+import string
+
+def generate_password(length=10):
+    """Generate a random password"""
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
+
 @api_router.post("/bookings/guest", response_model=BookingResponse)
 async def create_guest_booking(booking_data: GuestBookingCreate):
-    """Create booking for guest users (no login required)"""
+    """Create booking for guest users - automatically creates user account"""
     event = await db.events.find_one({"id": booking_data.event_id}, {"_id": 0})
     if not event:
         raise HTTPException(status_code=404, detail="Esemény nem található")
@@ -473,22 +481,48 @@ async def create_guest_booking(booking_data: GuestBookingCreate):
     if current_bookings >= event["max_capacity"]:
         raise HTTPException(status_code=400, detail="Az esemény betelt")
     
-    # Check if email already booked this event
-    existing = await db.bookings.find_one({
-        "event_id": booking_data.event_id, 
-        "user_email": booking_data.guest_email,
-        "status": "active"
-    })
-    if existing:
-        raise HTTPException(status_code=400, detail="Ezzel az email címmel már van foglalás erre az eseményre")
-    
     sport = await db.sports.find_one({"id": event["sport_id"]}, {"_id": 0})
     
+    # Check if user already exists with this email
+    existing_user = await db.users.find_one({"email": booking_data.guest_email}, {"_id": 0})
+    
+    if existing_user:
+        # User exists - check if already booked
+        existing_booking = await db.bookings.find_one({
+            "event_id": booking_data.event_id, 
+            "user_id": existing_user["id"],
+            "status": "active"
+        })
+        if existing_booking:
+            raise HTTPException(status_code=400, detail="Ezzel az email címmel már van foglalás erre az eseményre")
+        
+        user_id = existing_user["id"]
+        user_name = existing_user["name"]
+        is_new_user = False
+    else:
+        # Create new user account
+        generated_password = generate_password()
+        user_id = str(uuid.uuid4())
+        user_doc = {
+            "id": user_id,
+            "email": booking_data.guest_email,
+            "name": booking_data.guest_name,
+            "phone": booking_data.guest_phone,
+            "password": hash_password(generated_password),
+            "role": "user",
+            "assigned_sports": [],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.users.insert_one(user_doc)
+        user_name = booking_data.guest_name
+        is_new_user = True
+    
+    # Create booking
     booking_id = str(uuid.uuid4())
     booking_doc = {
         "id": booking_id,
         "event_id": booking_data.event_id,
-        "user_id": f"guest_{booking_id}",
+        "user_id": user_id,
         "user_name": booking_data.guest_name,
         "user_email": booking_data.guest_email,
         "user_phone": booking_data.guest_phone,
@@ -497,33 +531,66 @@ async def create_guest_booking(booking_data: GuestBookingCreate):
         "sport_id": event["sport_id"],
         "sport_name": sport["name"] if sport else "Ismeretlen",
         "status": "active",
-        "is_guest": True,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.bookings.insert_one(booking_doc)
     
-    # Send confirmation email
-    send_email(
-        booking_data.guest_email,
-        f"Foglalás megerősítve - {event['name']}",
-        f"""
-        <html>
-        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #2563EB;">Kedves {booking_data.guest_name}!</h2>
-            <p>Foglalásod sikeresen rögzítettük a következő eseményre:</p>
-            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <p><strong>Esemény:</strong> {event['name']}</p>
-                <p><strong>Sport:</strong> {sport['name'] if sport else 'N/A'}</p>
-                <p><strong>Időpont:</strong> {event['event_date']}</p>
-                <p><strong>Foglalási azonosító:</strong> {booking_id}</p>
-            </div>
-            <p>Várunk szeretettel!</p>
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-            <p style="color: #64748b; font-size: 12px;">Ez egy automatikus üzenet, kérjük ne válaszolj rá.</p>
-        </body>
-        </html>
-        """
-    )
+    # Send confirmation email with account info if new user
+    if is_new_user:
+        send_email(
+            booking_data.guest_email,
+            f"Foglalás megerősítve + Fiók létrehozva - {event['name']}",
+            f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #2563EB;">Kedves {booking_data.guest_name}!</h2>
+                <p>Foglalásod sikeresen rögzítettük a következő eseményre:</p>
+                <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p><strong>Esemény:</strong> {event['name']}</p>
+                    <p><strong>Sport:</strong> {sport['name'] if sport else 'N/A'}</p>
+                    <p><strong>Időpont:</strong> {event['event_date']}</p>
+                    <p><strong>Foglalási azonosító:</strong> {booking_id}</p>
+                </div>
+                
+                <h3 style="color: #2563EB; margin-top: 30px;">Felhasználói fiókod létrejött!</h3>
+                <p>Automatikusan létrehoztunk számodra egy felhasználói fiókot, amellyel bejelentkezve kezelheted a foglalásaidat:</p>
+                <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+                    <p><strong>Email:</strong> {booking_data.guest_email}</p>
+                    <p><strong>Jelszó:</strong> {generated_password}</p>
+                </div>
+                <p style="color: #64748b; font-size: 14px;">A jelszót bejelentkezés után a Profilom menüpontban megváltoztathatod.</p>
+                
+                <p style="margin-top: 30px;">Várunk szeretettel!</p>
+                <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                <p style="color: #64748b; font-size: 12px;">Ez egy automatikus üzenet, kérjük ne válaszolj rá.</p>
+            </body>
+            </html>
+            """
+        )
+    else:
+        # Existing user - just send booking confirmation
+        send_email(
+            booking_data.guest_email,
+            f"Foglalás megerősítve - {event['name']}",
+            f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #2563EB;">Kedves {booking_data.guest_name}!</h2>
+                <p>Foglalásod sikeresen rögzítettük a következő eseményre:</p>
+                <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p><strong>Esemény:</strong> {event['name']}</p>
+                    <p><strong>Sport:</strong> {sport['name'] if sport else 'N/A'}</p>
+                    <p><strong>Időpont:</strong> {event['event_date']}</p>
+                    <p><strong>Foglalási azonosító:</strong> {booking_id}</p>
+                </div>
+                <p>A foglalásaidat a weboldalon a <strong>Foglalásaim</strong> menüpontban kezelheted.</p>
+                <p>Várunk szeretettel!</p>
+                <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                <p style="color: #64748b; font-size: 12px;">Ez egy automatikus üzenet, kérjük ne válaszolj rá.</p>
+            </body>
+            </html>
+            """
+        )
     
     return BookingResponse(**booking_doc)
 
