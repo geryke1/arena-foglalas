@@ -131,7 +131,9 @@ const LoadingScreen = () => (
 
 const Header = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     axios.get(`${API}/settings`).then(res => setSettings(res.data)).catch(() => {});
@@ -144,66 +146,146 @@ const Header = () => {
   };
 
   const logoSize = settings?.site_logo_size || 32;
-  const headerHeight = Math.max(64, logoSize + 24); // min 64px, logo + padding
+  const headerHeight = Math.max(64, logoSize + 24);
+
+  const handleMobileNav = (path) => {
+    setMobileMenuOpen(false);
+    navigate(path);
+  };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black" style={{ height: `${headerHeight}px` }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-        <div className="flex items-center justify-between h-full">
-          <Link to="/" className="flex items-center gap-3">
-            {settings?.site_logo ? (
-              <img 
-                src={getImageUrl(settings.site_logo)} 
-                alt="Logo" 
-                style={{ height: `${logoSize}px`, width: 'auto' }}
-                className="object-contain" 
-              />
-            ) : (
-              <Trophy className="h-8 w-8 text-[#2563EB]" />
-            )}
-            <span className="font-bold text-xl text-white" style={{fontFamily: 'Manrope'}}>
-              {settings?.site_name || 'Aréna'}
-            </span>
-          </Link>
-          <div className="flex items-center gap-4">
-            {user ? (
-              <>
-                {(user.role === "admin" || user.role === "subadmin") && (
-                  <Link to="/admin">
-                    <Button variant="outline" className="rounded-full border-white/30 text-white hover:bg-white/10" data-testid="admin-btn">
-                      <LayoutDashboard className="h-4 w-4 mr-2" />
-                      Admin
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black" style={{ height: `${headerHeight}px` }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+          <div className="flex items-center justify-between h-full">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              {settings?.site_logo ? (
+                <img 
+                  src={getImageUrl(settings.site_logo)} 
+                  alt="Logo" 
+                  style={{ height: `${Math.min(logoSize, 40)}px`, width: 'auto' }}
+                  className="object-contain sm:hidden" 
+                />
+              ) : (
+                <Trophy className="h-7 w-7 sm:h-8 sm:w-8 text-[#2563EB]" />
+              )}
+              {settings?.site_logo && (
+                <img 
+                  src={getImageUrl(settings.site_logo)} 
+                  alt="Logo" 
+                  style={{ height: `${logoSize}px`, width: 'auto' }}
+                  className="object-contain hidden sm:block" 
+                />
+              )}
+              <span className="font-bold text-lg sm:text-xl text-white hidden sm:block" style={{fontFamily: 'Manrope'}}>
+                {settings?.site_name || 'Aréna'}
+              </span>
+            </Link>
+
+            {/* Desktop Menu */}
+            <div className="hidden md:flex items-center gap-4">
+              {user ? (
+                <>
+                  {(user.role === "admin" || user.role === "subadmin") && (
+                    <Link to="/admin">
+                      <Button variant="outline" className="rounded-full border-white/30 text-white hover:bg-white/10" data-testid="admin-btn">
+                        <LayoutDashboard className="h-4 w-4 mr-2" />
+                        Admin
+                      </Button>
+                    </Link>
+                  )}
+                  <Link to="/my-bookings">
+                    <Button variant="outline" className="rounded-full border-white/30 text-white hover:bg-white/10" data-testid="my-bookings-btn">
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Foglalásaim
                     </Button>
                   </Link>
-                )}
-                <Link to="/my-bookings">
-                  <Button variant="outline" className="rounded-full border-white/30 text-white hover:bg-white/10" data-testid="my-bookings-btn">
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    Foglalásaim
-                  </Button>
-                </Link>
-                <Link to="/profile">
-                  <Button variant="outline" className="rounded-full border-white/30 text-white hover:bg-white/10" data-testid="profile-btn">
-                    <User className="h-4 w-4 mr-2" />
-                    Profilom
-                  </Button>
-                </Link>
-                <HeaderUserMenu />
-              </>
-            ) : (
-              <>
-                <Link to="/login">
-                  <Button variant="ghost" className="text-white hover:bg-white/10" data-testid="login-btn">Bejelentkezés</Button>
-                </Link>
-                <Link to="/register">
-                  <Button className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full px-6" data-testid="register-btn">Regisztráció</Button>
-                </Link>
-              </>
-            )}
+                  <Link to="/profile">
+                    <Button variant="outline" className="rounded-full border-white/30 text-white hover:bg-white/10" data-testid="profile-btn">
+                      <User className="h-4 w-4 mr-2" />
+                      Profilom
+                    </Button>
+                  </Link>
+                  <HeaderUserMenu />
+                </>
+              ) : (
+                <>
+                  <Link to="/login">
+                    <Button variant="ghost" className="text-white hover:bg-white/10" data-testid="login-btn">Bejelentkezés</Button>
+                  </Link>
+                  <Link to="/register">
+                    <Button className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full px-6" data-testid="register-btn">Regisztráció</Button>
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button 
+              className="md:hidden p-2 text-white hover:bg-white/10 rounded-lg"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              data-testid="mobile-menu-btn"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setMobileMenuOpen(false)} />
+          <div className="fixed top-0 right-0 h-full w-72 bg-white z-50 md:hidden shadow-xl" style={{ paddingTop: `${headerHeight}px` }}>
+            <div className="p-4 space-y-2">
+              {user ? (
+                <>
+                  <div className="px-4 py-3 border-b border-slate-200 mb-2">
+                    <p className="font-medium text-slate-900">{user.name}</p>
+                    <p className="text-sm text-slate-500">{user.email}</p>
+                  </div>
+                  {(user.role === "admin" || user.role === "subadmin") && (
+                    <button onClick={() => handleMobileNav('/admin')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-100 rounded-lg">
+                      <LayoutDashboard className="h-5 w-5" />
+                      Admin
+                    </button>
+                  )}
+                  <button onClick={() => handleMobileNav('/my-bookings')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-100 rounded-lg">
+                    <BookOpen className="h-5 w-5" />
+                    Foglalásaim
+                  </button>
+                  <button onClick={() => handleMobileNav('/profile')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-100 rounded-lg">
+                    <User className="h-5 w-5" />
+                    Profilom
+                  </button>
+                  <div className="border-t border-slate-200 mt-2 pt-2">
+                    <button 
+                      onClick={() => { setMobileMenuOpen(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg"
+                    >
+                      <LogOut className="h-5 w-5" />
+                      Kijelentkezés
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => handleMobileNav('/login')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-100 rounded-lg">
+                    <User className="h-5 w-5" />
+                    Bejelentkezés
+                  </button>
+                  <button onClick={() => handleMobileNav('/register')} className="w-full flex items-center gap-3 px-4 py-3 bg-[#2563EB] text-white hover:bg-[#1d4ed8] rounded-lg">
+                    <User className="h-5 w-5" />
+                    Regisztráció
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 };
 
