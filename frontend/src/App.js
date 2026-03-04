@@ -463,19 +463,26 @@ const SportEventsPage = () => {
     }
   };
 
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${BACKEND_URL}${url}`;
+  };
+
   if (loading) return <LoadingScreen />;
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
+      <Header />
+      {/* Header Image */}
       <div 
-        className="relative h-64 bg-cover bg-center"
+        className="relative h-64 bg-cover bg-center pt-16"
         style={{
-          backgroundImage: `url('${sport?.image_url || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}')`
+          backgroundImage: `url('${getImageUrl(sport?.image_url) || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}')`
         }}
       >
         <div className="absolute inset-0 bg-black/50" />
-        <div className="absolute inset-0 flex items-center">
+        <div className="absolute inset-0 flex items-center pt-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <Link to="/" className="inline-flex items-center text-white/80 hover:text-white mb-4 transition-colors">
               <ArrowLeft className="h-4 w-4 mr-2" />
