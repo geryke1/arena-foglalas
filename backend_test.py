@@ -557,6 +557,7 @@ class ArenaBookingAPITester:
         self.test_init_admin()
         self.test_admin_login()
         self.test_user_registration()
+        self.test_regular_user_login()  # Test with provided credentials
         self.test_get_me()
         self.test_admin_stats()
         
