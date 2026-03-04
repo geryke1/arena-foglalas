@@ -151,6 +151,26 @@ class SubadminUpdate(BaseModel):
 class MessageResponse(BaseModel):
     message: str
 
+class ProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None
+
+class SiteSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    site_name: str = "Aréna"
+    site_logo: Optional[str] = None
+    hero_title: str = "Sport, Koncertek, Élmények"
+    hero_subtitle: str = "A város multifunkcionális sport- és rendezvényközpontja, 5000 fő férőhellyel"
+    hero_image: Optional[str] = None
+    footer_text: str = "© 2024 Aréna Sport- és Rendezvényközpont. Minden jog fenntartva."
+    footer_logo: Optional[str] = None
+
+class SiteSettingsResponse(SiteSettings):
+    id: str
+
 # ==================== HELPERS ====================
 
 def hash_password(password: str) -> str:
