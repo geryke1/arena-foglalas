@@ -134,11 +134,23 @@ code {
     @apply border-2 border-[#2563EB] text-[#2563EB] hover:bg-[#2563EB]/5 rounded-full px-6 py-2 font-medium transition-all;
 }
 
-/* Sport cards grid */
+/* Sport cards grid - max 3 columns */
 .sport-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(1, 1fr);
     gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+    .sport-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .sport-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 /* Dashboard sidebar */
