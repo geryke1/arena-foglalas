@@ -127,6 +127,118 @@ const LoadingScreen = () => (
   </div>
 );
 
+// ==================== SHARED HEADER ====================
+
+const Header = () => {
+  const { user } = useAuth();
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    axios.get(`${API}/settings`).then(res => setSettings(res.data)).catch(() => {});
+  }, []);
+
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${BACKEND_URL}${url}`;
+  };
+
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <Link to="/" className="flex items-center gap-2">
+            {settings?.site_logo ? (
+              <img src={getImageUrl(settings.site_logo)} alt="Logo" className="h-8 w-8 object-contain" />
+            ) : (
+              <Trophy className="h-8 w-8 text-[#2563EB]" />
+            )}
+            <span className="font-bold text-xl text-white" style={{fontFamily: 'Manrope'}}>
+              {settings?.site_name || 'Aréna'}
+            </span>
+          </Link>
+          <div className="flex items-center gap-4">
+            {user ? (
+              <>
+                {(user.role === "admin" || user.role === "subadmin") && (
+                  <Link to="/admin">
+                    <Button variant="outline" className="rounded-full border-white/30 text-white hover:bg-white/10" data-testid="admin-btn">
+                      <LayoutDashboard className="h-4 w-4 mr-2" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
+                <Link to="/my-bookings">
+                  <Button variant="outline" className="rounded-full border-white/30 text-white hover:bg-white/10" data-testid="my-bookings-btn">
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Foglalásaim
+                  </Button>
+                </Link>
+                <HeaderUserMenu />
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" className="text-white hover:bg-white/10" data-testid="login-btn">Bejelentkezés</Button>
+                </Link>
+                <Link to="/register">
+                  <Button className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full px-6" data-testid="register-btn">Regisztráció</Button>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+const HeaderUserMenu = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+        data-testid="user-menu-btn"
+      >
+        <div className="w-8 h-8 rounded-full bg-[#2563EB] flex items-center justify-center text-white font-medium">
+          {user?.name?.charAt(0).toUpperCase()}
+        </div>
+        <span className="text-sm font-medium text-white hidden sm:block">{user?.name}</span>
+      </button>
+      
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 z-50 overflow-hidden">
+            <div className="p-4 border-b border-slate-100">
+              <p className="font-medium text-slate-900">{user?.name}</p>
+              <p className="text-sm text-slate-500">{user?.email}</p>
+              <Badge className="mt-2" variant="secondary">
+                {user?.role === 'admin' ? 'Admin' : user?.role === 'subadmin' ? 'Subadmin' : 'Felhasználó'}
+              </Badge>
+            </div>
+            <div className="p-2">
+              <button
+                onClick={() => { logout(); navigate('/'); setOpen(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                data-testid="logout-btn"
+              >
+                <LogOut className="h-4 w-4" />
+                Kijelentkezés
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 // ==================== PUBLIC PAGES ====================
 
 // Home Page
@@ -134,7 +246,6 @@ const HomePage = () => {
   const [sports, setSports] = useState([]);
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
 
   useEffect(() => {
     fetchData();
@@ -165,53 +276,7 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2">
-              {settings?.site_logo ? (
-                <img src={getImageUrl(settings.site_logo)} alt="Logo" className="h-8 w-8 object-contain" />
-              ) : (
-                <Trophy className="h-8 w-8 text-[#2563EB]" />
-              )}
-              <span className="font-bold text-xl text-slate-900" style={{fontFamily: 'Manrope'}}>
-                {settings?.site_name || 'Aréna'}
-              </span>
-            </Link>
-            <div className="flex items-center gap-4">
-              {user ? (
-                <>
-                  {(user.role === "admin" || user.role === "subadmin") && (
-                    <Link to="/admin">
-                      <Button variant="outline" className="rounded-full" data-testid="admin-btn">
-                        <LayoutDashboard className="h-4 w-4 mr-2" />
-                        Admin
-                      </Button>
-                    </Link>
-                  )}
-                  <Link to="/my-bookings">
-                    <Button variant="outline" className="rounded-full" data-testid="my-bookings-btn">
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      Foglalásaim
-                    </Button>
-                  </Link>
-                  <UserMenu />
-                </>
-              ) : (
-                <>
-                  <Link to="/login">
-                    <Button variant="ghost" data-testid="login-btn">Bejelentkezés</Button>
-                  </Link>
-                  <Link to="/register">
-                    <Button className="btn-primary" data-testid="register-btn">Regisztráció</Button>
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       {/* Hero Section */}
       <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
