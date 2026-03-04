@@ -1,53 +1,1990 @@
-import { useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, Link } from "react-router-dom";
 import axios from "axios";
+import { Toaster, toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Calendar, 
+  Users, 
+  MapPin, 
+  Trophy, 
+  Activity, 
+  LogOut, 
+  Menu, 
+  X, 
+  Plus, 
+  Edit, 
+  Trash2,
+  ChevronRight,
+  Clock,
+  Mail,
+  Phone,
+  User,
+  Shield,
+  LayoutDashboard,
+  FolderOpen,
+  CalendarDays,
+  UserCog,
+  BookOpen,
+  Home as HomeIcon,
+  ArrowLeft
+} from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const Home = () => {
-  const helloWorldApi = async () => {
+// Auth Context
+const AuthContext = createContext(null);
+
+export const useAuth = () => useContext(AuthContext);
+
+const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      fetchUser();
+    } else {
+      setLoading(false);
+    }
+  }, [token]);
+
+  const fetchUser = async () => {
     try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
+      const res = await axios.get(`${API}/auth/me`);
+      setUser(res.data);
     } catch (e) {
-      console.error(e, `errored out requesting / api`);
+      logout();
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+  const login = async (email, password) => {
+    const res = await axios.post(`${API}/auth/login`, { email, password });
+    localStorage.setItem("token", res.data.token);
+    setToken(res.data.token);
+    setUser(res.data.user);
+    return res.data.user;
+  };
+
+  const register = async (data) => {
+    const res = await axios.post(`${API}/auth/register`, data);
+    localStorage.setItem("token", res.data.token);
+    setToken(res.data.token);
+    setUser(res.data.user);
+    return res.data.user;
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+    setUser(null);
+    delete axios.defaults.headers.common["Authorization"];
+  };
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+// Protected Route
+const ProtectedRoute = ({ children, roles = [] }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) return <LoadingScreen />;
+  if (!user) return <Navigate to="/login" />;
+  if (roles.length > 0 && !roles.includes(user.role)) return <Navigate to="/" />;
+  
+  return children;
+};
+
+// Loading Screen
+const LoadingScreen = () => (
+  <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="spinner" />
+  </div>
+);
+
+// ==================== PUBLIC PAGES ====================
+
+// Home Page
+const HomePage = () => {
+  const [sports, setSports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    fetchSports();
+  }, []);
+
+  const fetchSports = async () => {
+    try {
+      const res = await axios.get(`${API}/sports`);
+      setSports(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link to="/" className="flex items-center gap-2">
+              <Trophy className="h-8 w-8 text-[#2563EB]" />
+              <span className="font-bold text-xl text-slate-900" style={{fontFamily: 'Manrope'}}>Aréna</span>
+            </Link>
+            <div className="flex items-center gap-4">
+              {user ? (
+                <>
+                  {(user.role === "admin" || user.role === "subadmin") && (
+                    <Link to="/admin">
+                      <Button variant="outline" className="rounded-full" data-testid="admin-btn">
+                        <LayoutDashboard className="h-4 w-4 mr-2" />
+                        Admin
+                      </Button>
+                    </Link>
+                  )}
+                  <Link to="/my-bookings">
+                    <Button variant="outline" className="rounded-full" data-testid="my-bookings-btn">
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Foglalásaim
+                    </Button>
+                  </Link>
+                  <UserMenu />
+                </>
+              ) : (
+                <>
+                  <Link to="/login">
+                    <Button variant="ghost" data-testid="login-btn">Bejelentkezés</Button>
+                  </Link>
+                  <Link to="/register">
+                    <Button className="btn-primary" data-testid="register-btn">Regisztráció</Button>
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1761823473903-cabb1ac05527?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBzcG9ydHMlMjBhcmVuYSUyMGV4dGVyaW9yJTIwc3VubnklMjBkYXl8ZW58MHx8fHwxNzcyNjM5Nzc1fDA&ixlib=rb-4.1.0&q=85')`
+          }}
+        />
+        <div className="absolute inset-0 hero-overlay" />
+        <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
+          <h1 
+            className="text-4xl md:text-6xl font-bold mb-6 animate-fadeIn"
+            style={{fontFamily: 'Manrope'}}
+          >
+            Sport, Koncertek, Élmények
+          </h1>
+          <p className="text-lg md:text-xl text-white/90 mb-8 animate-fadeIn stagger-1">
+            A város multifunkcionális sport- és rendezvényközpontja, 5000 fő férőhellyel
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeIn stagger-2">
+            <a href="#sports">
+              <Button className="btn-primary text-lg px-10 py-6" data-testid="explore-sports-btn">
+                <Activity className="mr-2 h-5 w-5" />
+                Fedezd fel a sportokat
+              </Button>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Sports Section */}
+      <section id="sports" className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{fontFamily: 'Manrope'}}>
+              Válassz sportot
+            </h2>
+            <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+              Böngéssz a sportkínálatunk között és foglalj helyet a számodra megfelelő eseményre
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="spinner" />
+            </div>
+          ) : sports.length === 0 ? (
+            <div className="text-center py-20">
+              <Trophy className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-500 text-lg">Még nincsenek sportok hozzáadva</p>
+            </div>
+          ) : (
+            <div className="sport-grid">
+              {sports.map((sport, idx) => (
+                <Link to={`/sports/${sport.id}`} key={sport.id}>
+                  <Card 
+                    className="card-hover overflow-hidden cursor-pointer group animate-fadeIn"
+                    style={{ animationDelay: `${idx * 0.1}s` }}
+                    data-testid={`sport-card-${sport.id}`}
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <img 
+                        src={sport.image_url || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBzcG9ydHMlMjBhcmVuYSUyMGV4dGVyaW9yJTIwc3VubnklMjBkYXl8ZW58MHx8fHwxNzcyNjM5Nzc1fDA&ixlib=rb-4.1.0&q=85'}
+                        alt={sport.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <h3 className="text-xl font-bold text-white" style={{fontFamily: 'Manrope'}}>
+                          {sport.name}
+                        </h3>
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <p className="text-slate-600 line-clamp-2">
+                        {sport.description || 'Fedezd fel az eseményeket és foglalj helyet!'}
+                      </p>
+                      <div className="flex items-center text-[#2563EB] mt-4 font-medium">
+                        <span>Események megtekintése</span>
+                        <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-white py-12 px-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Trophy className="h-8 w-8 text-[#2563EB]" />
+            <span className="font-bold text-2xl" style={{fontFamily: 'Manrope'}}>Aréna</span>
+          </div>
+          <p className="text-slate-400">© 2024 Aréna Sport- és Rendezvényközpont. Minden jog fenntartva.</p>
+        </div>
+      </footer>
     </div>
   );
 };
 
+// User Menu Dropdown
+const UserMenu = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
+        data-testid="user-menu-btn"
+      >
+        <div className="w-8 h-8 rounded-full bg-[#2563EB] flex items-center justify-center text-white font-medium">
+          {user?.name?.charAt(0).toUpperCase()}
+        </div>
+        <span className="text-sm font-medium text-slate-700 hidden sm:block">{user?.name}</span>
+      </button>
+      
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 z-50 overflow-hidden">
+            <div className="p-4 border-b border-slate-100">
+              <p className="font-medium text-slate-900">{user?.name}</p>
+              <p className="text-sm text-slate-500">{user?.email}</p>
+              <Badge className="mt-2" variant="secondary">
+                {user?.role === 'admin' ? 'Admin' : user?.role === 'subadmin' ? 'Subadmin' : 'Felhasználó'}
+              </Badge>
+            </div>
+            <div className="p-2">
+              <button
+                onClick={() => { logout(); navigate('/'); setOpen(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                data-testid="logout-btn"
+              >
+                <LogOut className="h-4 w-4" />
+                Kijelentkezés
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+// Sport Events Page
+const SportEventsPage = () => {
+  const { sportId } = useParams();
+  const [sport, setSport] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, [sportId]);
+
+  const fetchData = async () => {
+    try {
+      const [sportRes, eventsRes] = await Promise.all([
+        axios.get(`${API}/sports/${sportId}`),
+        axios.get(`${API}/events?sport_id=${sportId}`)
+      ]);
+      setSport(sportRes.data);
+      setEvents(eventsRes.data);
+    } catch (e) {
+      toast.error("Hiba történt az adatok betöltésekor");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <LoadingScreen />;
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <div 
+        className="relative h-64 bg-cover bg-center"
+        style={{
+          backgroundImage: `url('${sport?.image_url || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}')`
+        }}
+      >
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 flex items-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <Link to="/" className="inline-flex items-center text-white/80 hover:text-white mb-4 transition-colors">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Vissza a főoldalra
+            </Link>
+            <h1 className="text-4xl font-bold text-white" style={{fontFamily: 'Manrope'}}>
+              {sport?.name}
+            </h1>
+            <p className="text-white/80 mt-2">{sport?.description}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Events */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h2 className="text-2xl font-bold text-slate-900 mb-8" style={{fontFamily: 'Manrope'}}>
+          Elérhető események
+        </h2>
+
+        {events.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl border border-slate-200">
+            <Calendar className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 text-lg">Jelenleg nincs elérhető esemény</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events.map((event, idx) => (
+              <Link to={`/events/${event.id}`} key={event.id}>
+                <Card 
+                  className="card-hover overflow-hidden cursor-pointer group"
+                  data-testid={`event-card-${event.id}`}
+                >
+                  <div className="relative h-40 overflow-hidden">
+                    <img 
+                      src={event.cover_image ? `${BACKEND_URL}${event.cover_image}` : sport?.image_url || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}
+                      alt={event.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute top-4 right-4">
+                      <Badge className={event.current_bookings >= event.max_capacity ? 'bg-red-500' : 'bg-green-500'}>
+                        {event.current_bookings >= event.max_capacity ? 'Betelt' : 'Elérhető'}
+                      </Badge>
+                    </div>
+                  </div>
+                  <CardContent className="p-5">
+                    <h3 className="text-lg font-bold text-slate-900 mb-2" style={{fontFamily: 'Manrope'}}>
+                      {event.name}
+                    </h3>
+                    <div className="space-y-2 text-sm text-slate-600">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-[#2563EB]" />
+                        <span>{new Date(event.event_date).toLocaleDateString('hu-HU', { 
+                          year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-[#F97316]" />
+                        <span>{event.current_bookings} / {event.max_capacity} résztvevő</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Event Details Page
+const EventDetailsPage = () => {
+  const { eventId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [booking, setBooking] = useState(false);
+
+  useEffect(() => {
+    fetchEvent();
+  }, [eventId]);
+
+  const fetchEvent = async () => {
+    try {
+      const res = await axios.get(`${API}/events/${eventId}`);
+      setEvent(res.data);
+    } catch (e) {
+      toast.error("Esemény nem található");
+      navigate('/');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBooking = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setBooking(true);
+    try {
+      await axios.post(`${API}/bookings`, { event_id: eventId });
+      toast.success("Sikeres foglalás! Visszaigazoló emailt küldtünk.");
+      fetchEvent();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Hiba történt a foglalás során");
+    } finally {
+      setBooking(false);
+    }
+  };
+
+  if (loading) return <LoadingScreen />;
+
+  const isFull = event?.current_bookings >= event?.max_capacity;
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <div 
+        className="relative h-80 bg-cover bg-center"
+        style={{
+          backgroundImage: `url('${event?.cover_image ? `${BACKEND_URL}${event.cover_image}` : 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}')`
+        }}
+      >
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 flex items-end">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-8">
+            <Link 
+              to={`/sports/${event?.sport_id}`} 
+              className="inline-flex items-center text-white/80 hover:text-white mb-4 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Vissza a {event?.sport_name} eseményekhez
+            </Link>
+            <Badge className="mb-4 bg-[#2563EB]">{event?.sport_name}</Badge>
+            <h1 className="text-4xl font-bold text-white" style={{fontFamily: 'Manrope'}}>
+              {event?.name}
+            </h1>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Details */}
+          <div className="lg:col-span-2 space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Esemény leírása</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600 whitespace-pre-wrap">
+                  {event?.description || 'Nincs leírás megadva.'}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Booking Card */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-24">
+              <CardHeader>
+                <CardTitle>Foglalás</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 text-slate-600">
+                    <div className="w-10 h-10 rounded-full bg-[#2563EB]/10 flex items-center justify-center">
+                      <Calendar className="h-5 w-5 text-[#2563EB]" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Időpont</p>
+                      <p className="font-medium text-slate-900">
+                        {new Date(event?.event_date).toLocaleDateString('hu-HU', { 
+                          year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-600">
+                    <div className="w-10 h-10 rounded-full bg-[#F97316]/10 flex items-center justify-center">
+                      <Users className="h-5 w-5 text-[#F97316]" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Létszám</p>
+                      <p className="font-medium text-slate-900">
+                        {event?.current_bookings} / {event?.max_capacity} fő
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  {/* Progress bar */}
+                  <div className="w-full bg-slate-200 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all ${isFull ? 'bg-red-500' : 'bg-[#2563EB]'}`}
+                      style={{ width: `${(event?.current_bookings / event?.max_capacity) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-sm text-slate-500 text-center">
+                    {event?.max_capacity - event?.current_bookings} szabad hely
+                  </p>
+                </div>
+
+                <Button 
+                  className={`w-full ${isFull ? 'bg-slate-400' : 'btn-primary'}`}
+                  disabled={isFull || booking}
+                  onClick={handleBooking}
+                  data-testid="book-event-btn"
+                >
+                  {booking ? (
+                    <div className="spinner" />
+                  ) : isFull ? (
+                    'Betelt'
+                  ) : (
+                    'Foglalás'
+                  )}
+                </Button>
+
+                {!user && (
+                  <p className="text-sm text-slate-500 text-center">
+                    A foglaláshoz <Link to="/login" className="text-[#2563EB] hover:underline">jelentkezz be</Link>
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// My Bookings Page
+const MyBookingsPage = () => {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  const fetchBookings = async () => {
+    try {
+      const res = await axios.get(`${API}/bookings/my`);
+      setBookings(res.data);
+    } catch (e) {
+      toast.error("Hiba történt a foglalások betöltésekor");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = async (bookingId) => {
+    if (!window.confirm('Biztosan törölni szeretnéd a foglalást?')) return;
+    
+    try {
+      await axios.delete(`${API}/bookings/${bookingId}`);
+      toast.success("Foglalás törölve");
+      fetchBookings();
+    } catch (e) {
+      toast.error("Hiba történt a törlés során");
+    }
+  };
+
+  if (loading) return <LoadingScreen />;
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="flex items-center gap-4 mb-8">
+          <Link to="/" className="text-slate-500 hover:text-slate-700">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <h1 className="text-3xl font-bold text-slate-900" style={{fontFamily: 'Manrope'}}>
+            Foglalásaim
+          </h1>
+        </div>
+
+        {bookings.length === 0 ? (
+          <Card className="text-center py-12">
+            <BookOpen className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 text-lg">Még nincsenek foglalásaid</p>
+            <Link to="/">
+              <Button className="btn-primary mt-4">Böngéssz események között</Button>
+            </Link>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {bookings.map((booking) => (
+              <Card key={booking.id} className="overflow-hidden" data-testid={`booking-card-${booking.id}`}>
+                <CardContent className="p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={booking.status === 'active' ? 'default' : 'destructive'}>
+                          {booking.status === 'active' ? 'Aktív' : 'Törölve'}
+                        </Badge>
+                        <Badge variant="secondary">{booking.sport_name}</Badge>
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-900">{booking.event_name}</h3>
+                      <div className="flex items-center gap-2 text-sm text-slate-500">
+                        <Calendar className="h-4 w-4" />
+                        <span>{new Date(booking.event_date).toLocaleDateString('hu-HU', { 
+                          year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })}</span>
+                      </div>
+                    </div>
+                    {booking.status === 'active' && (
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => handleCancel(booking.id)}
+                        data-testid={`cancel-booking-${booking.id}`}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Lemondás
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ==================== AUTH PAGES ====================
+
+const LoginPage = () => {
+  const navigate = useNavigate();
+  const { login, user } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) navigate('/');
+  }, [user, navigate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const loggedUser = await login(email, password);
+      toast.success("Sikeres bejelentkezés!");
+      if (loggedUser.role === 'admin' || loggedUser.role === 'subadmin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Hibás bejelentkezési adatok");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <Link to="/" className="inline-flex items-center justify-center gap-2 mb-4">
+            <Trophy className="h-10 w-10 text-[#2563EB]" />
+            <span className="font-bold text-2xl text-slate-900" style={{fontFamily: 'Manrope'}}>Aréna</span>
+          </Link>
+          <CardTitle className="text-2xl" style={{fontFamily: 'Manrope'}}>Bejelentkezés</CardTitle>
+          <CardDescription>Add meg az adataidat a belépéshez</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email"
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="pelda@email.hu"
+                required
+                data-testid="login-email-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Jelszó</Label>
+              <Input 
+                id="password"
+                type="password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                data-testid="login-password-input"
+              />
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full btn-primary"
+              disabled={loading}
+              data-testid="login-submit-btn"
+            >
+              {loading ? <div className="spinner" /> : 'Bejelentkezés'}
+            </Button>
+          </form>
+          <p className="text-center text-sm text-slate-500 mt-6">
+            Még nincs fiókod?{' '}
+            <Link to="/register" className="text-[#2563EB] hover:underline font-medium">
+              Regisztrálj
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const RegisterPage = () => {
+  const navigate = useNavigate();
+  const { register, user } = useAuth();
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', password: '' });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) navigate('/');
+  }, [user, navigate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await register(formData);
+      toast.success("Sikeres regisztráció!");
+      navigate('/');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Hiba történt a regisztráció során");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <Link to="/" className="inline-flex items-center justify-center gap-2 mb-4">
+            <Trophy className="h-10 w-10 text-[#2563EB]" />
+            <span className="font-bold text-2xl text-slate-900" style={{fontFamily: 'Manrope'}}>Aréna</span>
+          </Link>
+          <CardTitle className="text-2xl" style={{fontFamily: 'Manrope'}}>Regisztráció</CardTitle>
+          <CardDescription>Hozd létre fiókodat és foglalj eseményekre</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Teljes név</Label>
+              <Input 
+                id="name"
+                value={formData.name} 
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                placeholder="Kovács Péter"
+                required
+                data-testid="register-name-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email"
+                type="email" 
+                value={formData.email} 
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                placeholder="pelda@email.hu"
+                required
+                data-testid="register-email-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefonszám (opcionális)</Label>
+              <Input 
+                id="phone"
+                type="tel" 
+                value={formData.phone} 
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                placeholder="+36 30 123 4567"
+                data-testid="register-phone-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Jelszó</Label>
+              <Input 
+                id="password"
+                type="password" 
+                value={formData.password} 
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                placeholder="••••••••"
+                required
+                minLength={6}
+                data-testid="register-password-input"
+              />
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full btn-primary"
+              disabled={loading}
+              data-testid="register-submit-btn"
+            >
+              {loading ? <div className="spinner" /> : 'Regisztráció'}
+            </Button>
+          </form>
+          <p className="text-center text-sm text-slate-500 mt-6">
+            Már van fiókod?{' '}
+            <Link to="/login" className="text-[#2563EB] hover:underline font-medium">
+              Jelentkezz be
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// ==================== ADMIN PAGES ====================
+
+// Admin Layout
+const AdminLayout = ({ children }) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const menuItems = user?.role === 'admin' ? [
+    { icon: LayoutDashboard, label: 'Áttekintés', path: '/admin' },
+    { icon: FolderOpen, label: 'Sportok', path: '/admin/sports' },
+    { icon: CalendarDays, label: 'Események', path: '/admin/events' },
+    { icon: UserCog, label: 'Subadminok', path: '/admin/subadmins' },
+    { icon: BookOpen, label: 'Foglalások', path: '/admin/bookings' },
+  ] : [
+    { icon: LayoutDashboard, label: 'Áttekintés', path: '/admin' },
+    { icon: CalendarDays, label: 'Események', path: '/admin/events' },
+    { icon: BookOpen, label: 'Foglalások', path: '/admin/bookings' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-100">
+      {/* Mobile header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2">
+            {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+          <div className="flex items-center gap-2">
+            <Trophy className="h-6 w-6 text-[#2563EB]" />
+            <span className="font-bold text-lg">Admin</span>
+          </div>
+          <UserMenu />
+        </div>
+      </div>
+
+      {/* Sidebar */}
+      <aside className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-slate-200 z-40 transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+        <div className="p-6 border-b border-slate-100">
+          <Link to="/" className="flex items-center gap-2">
+            <Trophy className="h-8 w-8 text-[#2563EB]" />
+            <span className="font-bold text-xl text-slate-900" style={{fontFamily: 'Manrope'}}>Aréna</span>
+          </Link>
+          <Badge className="mt-3" variant="outline">
+            {user?.role === 'admin' ? 'Admin Panel' : 'Subadmin Panel'}
+          </Badge>
+        </div>
+        
+        <nav className="p-4 space-y-1">
+          {menuItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`sidebar-item ${window.location.pathname === item.path ? 'active' : ''}`}
+              data-testid={`sidebar-${item.label.toLowerCase().replace(/\s/g, '-')}`}
+            >
+              <item.icon className="h-5 w-5" />
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100">
+          <Link to="/" className="sidebar-item mb-2">
+            <HomeIcon className="h-5 w-5" />
+            <span>Vissza a főoldalra</span>
+          </Link>
+          <button 
+            onClick={() => { logout(); navigate('/'); }}
+            className="sidebar-item text-red-600 hover:bg-red-50 w-full"
+            data-testid="admin-logout-btn"
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Kijelentkezés</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <main className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : ''} pt-16 lg:pt-0`}>
+        <div className="p-6 lg:p-8">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+// Admin Dashboard
+const AdminDashboard = () => {
+  const { user } = useAuth();
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const res = await axios.get(`${API}/admin/stats`);
+      setStats(res.data);
+    } catch (e) {
+      toast.error("Hiba történt");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initialize admin on first load
+  useEffect(() => {
+    axios.post(`${API}/init-admin`).catch(() => {});
+  }, []);
+
+  if (loading) return <LoadingScreen />;
+
+  const statCards = [
+    { icon: FolderOpen, label: 'Sportok', value: stats?.total_sports || 0, color: 'bg-blue-500' },
+    { icon: CalendarDays, label: 'Események', value: stats?.total_events || 0, color: 'bg-orange-500' },
+    { icon: BookOpen, label: 'Aktív foglalások', value: stats?.total_bookings || 0, color: 'bg-green-500' },
+    ...(user?.role === 'admin' ? [
+      { icon: Users, label: 'Felhasználók', value: stats?.total_users || 0, color: 'bg-purple-500' },
+      { icon: Shield, label: 'Subadminok', value: stats?.total_subadmins || 0, color: 'bg-pink-500' },
+    ] : [])
+  ];
+
+  return (
+    <AdminLayout>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900" style={{fontFamily: 'Manrope'}}>
+            Üdvözöllek, {user?.name}!
+          </h1>
+          <p className="text-slate-500 mt-1">Itt láthatod a rendszer áttekintését</p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          {statCards.map((stat, idx) => (
+            <Card key={idx} className="card-hover" data-testid={`stat-${stat.label.toLowerCase()}`}>
+              <CardContent className="p-6">
+                <div className={`w-12 h-12 rounded-xl ${stat.color} flex items-center justify-center mb-4`}>
+                  <stat.icon className="h-6 w-6 text-white" />
+                </div>
+                <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
+                <p className="text-slate-500">{stat.label}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Quick actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Gyors műveletek</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-4">
+            {user?.role === 'admin' && (
+              <Link to="/admin/sports">
+                <Button className="btn-primary" data-testid="quick-add-sport">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Új sport
+                </Button>
+              </Link>
+            )}
+            <Link to="/admin/events">
+              <Button className="btn-secondary" data-testid="quick-add-event">
+                <Plus className="h-4 w-4 mr-2" />
+                Új esemény
+              </Button>
+            </Link>
+            <Link to="/admin/bookings">
+              <Button variant="outline" data-testid="quick-view-bookings">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Foglalások megtekintése
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    </AdminLayout>
+  );
+};
+
+// Admin Sports Page
+const AdminSportsPage = () => {
+  const [sports, setSports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingSport, setEditingSport] = useState(null);
+  const [formData, setFormData] = useState({ name: '', description: '', image_url: '' });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchSports();
+  }, []);
+
+  const fetchSports = async () => {
+    try {
+      const res = await axios.get(`${API}/sports`);
+      setSports(res.data);
+    } catch (e) {
+      toast.error("Hiba történt");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openModal = (sport = null) => {
+    setEditingSport(sport);
+    setFormData(sport ? { name: sport.name, description: sport.description || '', image_url: sport.image_url || '' } : { name: '', description: '', image_url: '' });
+    setShowModal(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      if (editingSport) {
+        await axios.put(`${API}/admin/sports/${editingSport.id}`, formData);
+        toast.success("Sport módosítva");
+      } else {
+        await axios.post(`${API}/admin/sports`, formData);
+        toast.success("Sport létrehozva");
+      }
+      setShowModal(false);
+      fetchSports();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Hiba történt");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Biztosan törölni szeretnéd? Ez törli az összes kapcsolódó eseményt és foglalást is!')) return;
+    try {
+      await axios.delete(`${API}/admin/sports/${id}`);
+      toast.success("Sport törölve");
+      fetchSports();
+    } catch (e) {
+      toast.error("Hiba történt");
+    }
+  };
+
+  if (loading) return <AdminLayout><LoadingScreen /></AdminLayout>;
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900" style={{fontFamily: 'Manrope'}}>Sportok kezelése</h1>
+            <p className="text-slate-500 mt-1">Hozz létre és kezelj sport kategóriákat</p>
+          </div>
+          <Button className="btn-primary" onClick={() => openModal()} data-testid="add-sport-btn">
+            <Plus className="h-4 w-4 mr-2" />
+            Új sport
+          </Button>
+        </div>
+
+        {sports.length === 0 ? (
+          <Card className="text-center py-16">
+            <FolderOpen className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 text-lg">Még nincsenek sportok</p>
+            <Button className="btn-primary mt-4" onClick={() => openModal()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Első sport hozzáadása
+            </Button>
+          </Card>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sports.map((sport) => (
+              <Card key={sport.id} className="overflow-hidden" data-testid={`admin-sport-${sport.id}`}>
+                <div className="relative h-40">
+                  <img 
+                    src={sport.image_url || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}
+                    alt={sport.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <h3 className="absolute bottom-4 left-4 text-xl font-bold text-white">{sport.name}</h3>
+                </div>
+                <CardContent className="p-4">
+                  <p className="text-slate-600 text-sm line-clamp-2 mb-4">
+                    {sport.description || 'Nincs leírás'}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => openModal(sport)} data-testid={`edit-sport-${sport.id}`}>
+                      <Edit className="h-4 w-4 mr-1" />
+                      Szerkesztés
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(sport.id)} data-testid={`delete-sport-${sport.id}`}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Modal */}
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowModal(false)}>
+            <Card className="w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+              <CardHeader>
+                <CardTitle>{editingSport ? 'Sport szerkesztése' : 'Új sport'}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Név</Label>
+                    <Input 
+                      value={formData.name} 
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      required
+                      data-testid="sport-name-input"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Leírás</Label>
+                    <Input 
+                      value={formData.description} 
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      data-testid="sport-description-input"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Kép URL</Label>
+                    <Input 
+                      value={formData.image_url} 
+                      onChange={(e) => setFormData({...formData, image_url: e.target.value})}
+                      placeholder="https://..."
+                      data-testid="sport-image-input"
+                    />
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button type="button" variant="outline" onClick={() => setShowModal(false)}>Mégse</Button>
+                    <Button type="submit" className="btn-primary" disabled={saving} data-testid="sport-submit-btn">
+                      {saving ? 'Mentés...' : (editingSport ? 'Mentés' : 'Létrehozás')}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </AdminLayout>
+  );
+};
+
+// Admin Events Page
+const AdminEventsPage = () => {
+  const { user } = useAuth();
+  const [events, setEvents] = useState([]);
+  const [sports, setSports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [formData, setFormData] = useState({ 
+    name: '', description: '', sport_id: '', event_date: '', max_capacity: 50, cover_image: '' 
+  });
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [eventsRes, sportsRes] = await Promise.all([
+        axios.get(`${API}/events`),
+        axios.get(`${API}/sports`)
+      ]);
+      
+      // Filter events for subadmin
+      let filteredEvents = eventsRes.data;
+      if (user?.role === 'subadmin') {
+        filteredEvents = eventsRes.data.filter(e => user.assigned_sports.includes(e.sport_id));
+      }
+      
+      // Filter sports for subadmin
+      let filteredSports = sportsRes.data;
+      if (user?.role === 'subadmin') {
+        filteredSports = sportsRes.data.filter(s => user.assigned_sports.includes(s.id));
+      }
+      
+      setEvents(filteredEvents);
+      setSports(filteredSports);
+    } catch (e) {
+      toast.error("Hiba történt");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openModal = (event = null) => {
+    setEditingEvent(event);
+    if (event) {
+      setFormData({
+        name: event.name,
+        description: event.description || '',
+        sport_id: event.sport_id,
+        event_date: event.event_date.slice(0, 16),
+        max_capacity: event.max_capacity,
+        cover_image: event.cover_image || ''
+      });
+    } else {
+      setFormData({ 
+        name: '', description: '', sport_id: sports[0]?.id || '', event_date: '', max_capacity: 50, cover_image: '' 
+      });
+    }
+    setShowModal(true);
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    const uploadData = new FormData();
+    uploadData.append('file', file);
+
+    try {
+      const res = await axios.post(`${API}/upload`, uploadData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setFormData({...formData, cover_image: res.data.url});
+      toast.success("Kép feltöltve");
+    } catch (e) {
+      toast.error("Hiba a kép feltöltésekor");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      if (editingEvent) {
+        await axios.put(`${API}/admin/events/${editingEvent.id}`, formData);
+        toast.success("Esemény módosítva");
+      } else {
+        await axios.post(`${API}/admin/events`, formData);
+        toast.success("Esemény létrehozva");
+      }
+      setShowModal(false);
+      fetchData();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Hiba történt");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Biztosan törölni szeretnéd az eseményt?')) return;
+    try {
+      await axios.delete(`${API}/admin/events/${id}`);
+      toast.success("Esemény törölve");
+      fetchData();
+    } catch (e) {
+      toast.error("Hiba történt");
+    }
+  };
+
+  if (loading) return <AdminLayout><LoadingScreen /></AdminLayout>;
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900" style={{fontFamily: 'Manrope'}}>Események kezelése</h1>
+            <p className="text-slate-500 mt-1">Hozz létre és kezelj eseményeket</p>
+          </div>
+          <Button className="btn-primary" onClick={() => openModal()} data-testid="add-event-btn" disabled={sports.length === 0}>
+            <Plus className="h-4 w-4 mr-2" />
+            Új esemény
+          </Button>
+        </div>
+
+        {sports.length === 0 ? (
+          <Card className="text-center py-16">
+            <FolderOpen className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 text-lg">Először hozz létre sportokat</p>
+            {user?.role === 'admin' && (
+              <Link to="/admin/sports">
+                <Button className="btn-primary mt-4">Sportok kezelése</Button>
+              </Link>
+            )}
+          </Card>
+        ) : events.length === 0 ? (
+          <Card className="text-center py-16">
+            <CalendarDays className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 text-lg">Még nincsenek események</p>
+            <Button className="btn-primary mt-4" onClick={() => openModal()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Első esemény hozzáadása
+            </Button>
+          </Card>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events.map((event) => (
+              <Card key={event.id} className="overflow-hidden" data-testid={`admin-event-${event.id}`}>
+                <div className="relative h-40">
+                  <img 
+                    src={event.cover_image ? `${BACKEND_URL}${event.cover_image}` : 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}
+                    alt={event.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <Badge className="absolute top-4 right-4">{event.sport_name}</Badge>
+                </div>
+                <CardContent className="p-4">
+                  <h3 className="font-bold text-lg text-slate-900 mb-2">{event.name}</h3>
+                  <div className="space-y-1 text-sm text-slate-500 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      {new Date(event.event_date).toLocaleDateString('hu-HU', { 
+                        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                      })}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      {event.current_bookings} / {event.max_capacity} fő
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => openModal(event)} data-testid={`edit-event-${event.id}`}>
+                      <Edit className="h-4 w-4 mr-1" />
+                      Szerkesztés
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(event.id)} data-testid={`delete-event-${event.id}`}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Modal */}
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto" onClick={() => setShowModal(false)}>
+            <Card className="w-full max-w-lg my-8" onClick={(e) => e.stopPropagation()}>
+              <CardHeader>
+                <CardTitle>{editingEvent ? 'Esemény szerkesztése' : 'Új esemény'}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Sport kategória</Label>
+                    <select 
+                      className="w-full h-11 px-3 rounded-lg border border-input bg-background"
+                      value={formData.sport_id}
+                      onChange={(e) => setFormData({...formData, sport_id: e.target.value})}
+                      required
+                      data-testid="event-sport-select"
+                    >
+                      <option value="">Válassz sportot...</option>
+                      {sports.map(s => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Esemény neve</Label>
+                    <Input 
+                      value={formData.name} 
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      required
+                      data-testid="event-name-input"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Leírás</Label>
+                    <textarea 
+                      className="w-full px-3 py-2 rounded-lg border border-input bg-background min-h-[100px]"
+                      value={formData.description} 
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      data-testid="event-description-input"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Időpont</Label>
+                      <Input 
+                        type="datetime-local"
+                        value={formData.event_date} 
+                        onChange={(e) => setFormData({...formData, event_date: e.target.value})}
+                        required
+                        data-testid="event-date-input"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Max létszám</Label>
+                      <Input 
+                        type="number"
+                        min="1"
+                        value={formData.max_capacity} 
+                        onChange={(e) => setFormData({...formData, max_capacity: parseInt(e.target.value)})}
+                        required
+                        data-testid="event-capacity-input"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Borítókép</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploading}
+                        data-testid="event-image-upload"
+                      />
+                    </div>
+                    {formData.cover_image && (
+                      <img 
+                        src={formData.cover_image.startsWith('http') ? formData.cover_image : `${BACKEND_URL}${formData.cover_image}`}
+                        alt="Preview"
+                        className="w-full h-32 object-cover rounded-lg mt-2"
+                      />
+                    )}
+                  </div>
+                  <div className="flex gap-2 justify-end pt-4">
+                    <Button type="button" variant="outline" onClick={() => setShowModal(false)}>Mégse</Button>
+                    <Button type="submit" className="btn-primary" disabled={saving} data-testid="event-submit-btn">
+                      {saving ? 'Mentés...' : (editingEvent ? 'Mentés' : 'Létrehozás')}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </AdminLayout>
+  );
+};
+
+// Admin Subadmins Page
+const AdminSubadminsPage = () => {
+  const [subadmins, setSubadmins] = useState([]);
+  const [sports, setSports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingSubadmin, setEditingSubadmin] = useState(null);
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '', assigned_sports: [] });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [subadminsRes, sportsRes] = await Promise.all([
+        axios.get(`${API}/admin/subadmins`),
+        axios.get(`${API}/sports`)
+      ]);
+      setSubadmins(subadminsRes.data);
+      setSports(sportsRes.data);
+    } catch (e) {
+      toast.error("Hiba történt");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openModal = (subadmin = null) => {
+    setEditingSubadmin(subadmin);
+    if (subadmin) {
+      setFormData({
+        name: subadmin.name,
+        email: subadmin.email,
+        password: '',
+        phone: subadmin.phone || '',
+        assigned_sports: subadmin.assigned_sports || []
+      });
+    } else {
+      setFormData({ name: '', email: '', password: '', phone: '', assigned_sports: [] });
+    }
+    setShowModal(true);
+  };
+
+  const handleSportToggle = (sportId) => {
+    setFormData(prev => ({
+      ...prev,
+      assigned_sports: prev.assigned_sports.includes(sportId)
+        ? prev.assigned_sports.filter(id => id !== sportId)
+        : [...prev.assigned_sports, sportId]
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      if (editingSubadmin) {
+        await axios.put(`${API}/admin/subadmins/${editingSubadmin.id}`, {
+          name: formData.name,
+          assigned_sports: formData.assigned_sports
+        });
+        toast.success("Subadmin módosítva");
+      } else {
+        await axios.post(`${API}/admin/subadmins`, formData);
+        toast.success("Subadmin létrehozva");
+      }
+      setShowModal(false);
+      fetchData();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Hiba történt");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Biztosan törölni szeretnéd a subadmint?')) return;
+    try {
+      await axios.delete(`${API}/admin/subadmins/${id}`);
+      toast.success("Subadmin törölve");
+      fetchData();
+    } catch (e) {
+      toast.error("Hiba történt");
+    }
+  };
+
+  const getSportNames = (sportIds) => {
+    return sportIds.map(id => sports.find(s => s.id === id)?.name).filter(Boolean).join(', ');
+  };
+
+  if (loading) return <AdminLayout><LoadingScreen /></AdminLayout>;
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900" style={{fontFamily: 'Manrope'}}>Subadminok kezelése</h1>
+            <p className="text-slate-500 mt-1">Hozz létre subadminokat és rendeld hozzá sportokhoz</p>
+          </div>
+          <Button className="btn-primary" onClick={() => openModal()} data-testid="add-subadmin-btn">
+            <Plus className="h-4 w-4 mr-2" />
+            Új subadmin
+          </Button>
+        </div>
+
+        {subadmins.length === 0 ? (
+          <Card className="text-center py-16">
+            <UserCog className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 text-lg">Még nincsenek subadminok</p>
+            <Button className="btn-primary mt-4" onClick={() => openModal()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Első subadmin hozzáadása
+            </Button>
+          </Card>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {subadmins.map((subadmin) => (
+              <Card key={subadmin.id} data-testid={`admin-subadmin-${subadmin.id}`}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-[#2563EB] flex items-center justify-center text-white text-xl font-bold">
+                      {subadmin.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900">{subadmin.name}</h3>
+                      <p className="text-sm text-slate-500">{subadmin.email}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm mb-4">
+                    {subadmin.phone && (
+                      <div className="flex items-center gap-2 text-slate-500">
+                        <Phone className="h-4 w-4" />
+                        {subadmin.phone}
+                      </div>
+                    )}
+                    <div className="flex items-start gap-2 text-slate-500">
+                      <FolderOpen className="h-4 w-4 mt-0.5" />
+                      <span>{getSportNames(subadmin.assigned_sports || []) || 'Nincs hozzárendelve'}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => openModal(subadmin)} data-testid={`edit-subadmin-${subadmin.id}`}>
+                      <Edit className="h-4 w-4 mr-1" />
+                      Szerkesztés
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(subadmin.id)} data-testid={`delete-subadmin-${subadmin.id}`}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Modal */}
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowModal(false)}>
+            <Card className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+              <CardHeader>
+                <CardTitle>{editingSubadmin ? 'Subadmin szerkesztése' : 'Új subadmin'}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Név</Label>
+                    <Input 
+                      value={formData.name} 
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      required
+                      data-testid="subadmin-name-input"
+                    />
+                  </div>
+                  {!editingSubadmin && (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input 
+                          type="email"
+                          value={formData.email} 
+                          onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          required
+                          data-testid="subadmin-email-input"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Jelszó</Label>
+                        <Input 
+                          type="password"
+                          value={formData.password} 
+                          onChange={(e) => setFormData({...formData, password: e.target.value})}
+                          required
+                          minLength={6}
+                          data-testid="subadmin-password-input"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Telefonszám (opcionális)</Label>
+                        <Input 
+                          type="tel"
+                          value={formData.phone} 
+                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                          data-testid="subadmin-phone-input"
+                        />
+                      </div>
+                    </>
+                  )}
+                  <div className="space-y-2">
+                    <Label>Hozzárendelt sportok</Label>
+                    <div className="space-y-2 max-h-40 overflow-y-auto border rounded-lg p-3">
+                      {sports.length === 0 ? (
+                        <p className="text-sm text-slate-500">Még nincsenek sportok</p>
+                      ) : (
+                        sports.map(sport => (
+                          <label key={sport.id} className="flex items-center gap-2 cursor-pointer">
+                            <input 
+                              type="checkbox"
+                              checked={formData.assigned_sports.includes(sport.id)}
+                              onChange={() => handleSportToggle(sport.id)}
+                              className="rounded border-slate-300"
+                            />
+                            <span className="text-sm">{sport.name}</span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end pt-4">
+                    <Button type="button" variant="outline" onClick={() => setShowModal(false)}>Mégse</Button>
+                    <Button type="submit" className="btn-primary" disabled={saving} data-testid="subadmin-submit-btn">
+                      {saving ? 'Mentés...' : (editingSubadmin ? 'Mentés' : 'Létrehozás')}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </AdminLayout>
+  );
+};
+
+// Admin Bookings Page
+const AdminBookingsPage = () => {
+  const { user } = useAuth();
+  const [bookings, setBookings] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filterEvent, setFilterEvent] = useState('');
+
+  useEffect(() => {
+    fetchData();
+  }, [filterEvent]);
+
+  const fetchData = async () => {
+    try {
+      const [bookingsRes, eventsRes] = await Promise.all([
+        axios.get(`${API}/admin/bookings${filterEvent ? `?event_id=${filterEvent}` : ''}`),
+        axios.get(`${API}/events`)
+      ]);
+      
+      let filteredEvents = eventsRes.data;
+      if (user?.role === 'subadmin') {
+        filteredEvents = eventsRes.data.filter(e => user.assigned_sports.includes(e.sport_id));
+      }
+      
+      setBookings(bookingsRes.data);
+      setEvents(filteredEvents);
+    } catch (e) {
+      toast.error("Hiba történt");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = async (bookingId) => {
+    if (!window.confirm('Biztosan törölni szeretnéd a foglalást?')) return;
+    try {
+      await axios.delete(`${API}/bookings/${bookingId}`);
+      toast.success("Foglalás törölve");
+      fetchData();
+    } catch (e) {
+      toast.error("Hiba történt");
+    }
+  };
+
+  if (loading) return <AdminLayout><LoadingScreen /></AdminLayout>;
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900" style={{fontFamily: 'Manrope'}}>Foglalások</h1>
+            <p className="text-slate-500 mt-1">Kezeld a foglalásokat</p>
+          </div>
+          <select 
+            className="h-11 px-4 rounded-lg border border-input bg-background w-full sm:w-64"
+            value={filterEvent}
+            onChange={(e) => setFilterEvent(e.target.value)}
+            data-testid="booking-filter-select"
+          >
+            <option value="">Minden esemény</option>
+            {events.map(e => (
+              <option key={e.id} value={e.id}>{e.name} - {e.sport_name}</option>
+            ))}
+          </select>
+        </div>
+
+        {bookings.length === 0 ? (
+          <Card className="text-center py-16">
+            <BookOpen className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 text-lg">Nincsenek foglalások</p>
+          </Card>
+        ) : (
+          <Card>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b">
+                  <tr>
+                    <th className="text-left p-4 font-semibold text-slate-600">Résztvevő</th>
+                    <th className="text-left p-4 font-semibold text-slate-600">Esemény</th>
+                    <th className="text-left p-4 font-semibold text-slate-600">Időpont</th>
+                    <th className="text-left p-4 font-semibold text-slate-600">Státusz</th>
+                    <th className="text-left p-4 font-semibold text-slate-600">Műveletek</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookings.map((booking) => (
+                    <tr key={booking.id} className="table-row border-b" data-testid={`booking-row-${booking.id}`}>
+                      <td className="p-4">
+                        <div>
+                          <p className="font-medium text-slate-900">{booking.user_name}</p>
+                          <p className="text-sm text-slate-500">{booking.user_email}</p>
+                          {booking.user_phone && (
+                            <p className="text-sm text-slate-500">{booking.user_phone}</p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <p className="font-medium text-slate-900">{booking.event_name}</p>
+                        <Badge variant="secondary" className="mt-1">{booking.sport_name}</Badge>
+                      </td>
+                      <td className="p-4 text-slate-600">
+                        {new Date(booking.event_date).toLocaleDateString('hu-HU', { 
+                          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })}
+                      </td>
+                      <td className="p-4">
+                        <Badge variant={booking.status === 'active' ? 'default' : 'destructive'}>
+                          {booking.status === 'active' ? 'Aktív' : 'Törölve'}
+                        </Badge>
+                      </td>
+                      <td className="p-4">
+                        {booking.status === 'active' && (
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => handleCancel(booking.id)}
+                            data-testid={`cancel-admin-booking-${booking.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
+      </div>
+    </AdminLayout>
+  );
+};
+
+// ==================== MAIN APP ====================
+
 function App() {
   return (
-    <div className="App">
+    <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
+          {/* Public routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/sports/:sportId" element={<SportEventsPage />} />
+          <Route path="/events/:eventId" element={<EventDetailsPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          
+          {/* Protected user routes */}
+          <Route path="/my-bookings" element={
+            <ProtectedRoute>
+              <MyBookingsPage />
+            </ProtectedRoute>
+          } />
+          
+          {/* Admin routes */}
+          <Route path="/admin" element={
+            <ProtectedRoute roles={['admin', 'subadmin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/sports" element={
+            <ProtectedRoute roles={['admin']}>
+              <AdminSportsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/events" element={
+            <ProtectedRoute roles={['admin', 'subadmin']}>
+              <AdminEventsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/subadmins" element={
+            <ProtectedRoute roles={['admin']}>
+              <AdminSubadminsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/bookings" element={
+            <ProtectedRoute roles={['admin', 'subadmin']}>
+              <AdminBookingsPage />
+            </ProtectedRoute>
+          } />
+          
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
-    </div>
+      <Toaster position="top-right" richColors />
+    </AuthProvider>
   );
 }
 
