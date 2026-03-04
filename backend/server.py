@@ -477,7 +477,7 @@ def generate_password(length=10):
     alphabet = string.ascii_letters + string.digits
     return ''.join(secrets.choice(alphabet) for _ in range(length))
 
-@api_router.post("/bookings/guest", response_model=BookingResponse)
+@api_router.post("/bookings/guest", response_model=GuestBookingResponse)
 async def create_guest_booking(booking_data: GuestBookingCreate):
     """Create booking for guest users - automatically creates user account"""
     event = await db.events.find_one({"id": booking_data.event_id}, {"_id": 0})
