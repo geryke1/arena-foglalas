@@ -420,10 +420,22 @@ class ArenaBookingAPITester:
         if not self.created_event_id or not self.test_user_id:
             return self.log_test("Guest Booking Existing User", False, "No event or test user created")
         
-        # Get the test user's email (we need to reconstruct it)
-        timestamp = datetime.now().strftime("%H%M%S")
-        existing_email = f"testuser{timestamp}@test.hu"
+        # Use a different timestamp to avoid conflicts
+        timestamp = str(int(datetime.now().timestamp()))[-6:]
+        existing_email = f"existinguser{timestamp}@test.hu"
         
+        # First create a user
+        user_data = {
+            "name": f"Existing User {timestamp}",
+            "email": existing_email,
+            "password": "testpass123"
+        }
+        user_success, user_status, user_response = self.make_request('POST', 'auth/register', user_data, expected_status=200)
+        
+        if not user_success:
+            return self.log_test("Guest Booking Existing User", False, f"Failed to create existing user: {user_status}")
+        
+        # Now try guest booking with same email
         guest_booking_data = {
             "event_id": self.created_event_id,
             "guest_name": "Existing User Guest",
@@ -433,8 +445,10 @@ class ArenaBookingAPITester:
         
         success, status, response = self.make_request('POST', 'bookings/guest', guest_booking_data, expected_status=200)
         
-        if success and 'id' in response:
-            return self.log_test("Guest Booking Existing User", True, f"Booking created for existing user: {response['user_name']}")
+        if success and 'booking' in response:
+            booking = response['booking']
+            is_new_user = response.get('is_new_user', True)
+            return self.log_test("Guest Booking Existing User", True, f"Booking created for existing user: {booking['user_name']}, is_new_user: {is_new_user}")
         else:
             return self.log_test("Guest Booking Existing User", False, f"Status: {status}, Response: {response}", 200, status)
 
