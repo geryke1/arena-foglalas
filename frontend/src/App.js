@@ -562,6 +562,8 @@ const EventDetailsPage = () => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [guestData, setGuestData] = useState({ guest_name: '', guest_email: '', guest_phone: '' });
 
   useEffect(() => {
     fetchEvent();
@@ -579,16 +581,27 @@ const EventDetailsPage = () => {
     }
   };
 
-  const handleBooking = async () => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${BACKEND_URL}${url}`;
+  };
 
+  const handleBookingClick = () => {
+    setShowBookingModal(true);
+  };
+
+  const handleGuestBooking = async (e) => {
+    e.preventDefault();
     setBooking(true);
     try {
-      await axios.post(`${API}/bookings`, { event_id: eventId });
+      await axios.post(`${API}/bookings/guest`, { 
+        event_id: eventId,
+        ...guestData 
+      });
       toast.success("Sikeres foglalás! Visszaigazoló emailt küldtünk.");
+      setShowBookingModal(false);
+      setGuestData({ guest_name: '', guest_email: '', guest_phone: '' });
       fetchEvent();
     } catch (e) {
       toast.error(e.response?.data?.detail || "Hiba történt a foglalás során");
@@ -603,15 +616,16 @@ const EventDetailsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
+      <Header />
+      {/* Header Image */}
       <div 
-        className="relative h-80 bg-cover bg-center"
+        className="relative h-80 bg-cover bg-center pt-16"
         style={{
-          backgroundImage: `url('${event?.cover_image ? `${BACKEND_URL}${event.cover_image}` : 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}')`
+          backgroundImage: `url('${getImageUrl(event?.cover_image) || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}')`
         }}
       >
         <div className="absolute inset-0 bg-black/50" />
-        <div className="absolute inset-0 flex items-end">
+        <div className="absolute inset-0 flex items-end pt-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-8">
             <Link 
               to={`/sports/${event?.sport_id}`} 
@@ -697,28 +711,80 @@ const EventDetailsPage = () => {
                 <Button 
                   className={`w-full ${isFull ? 'bg-slate-400' : 'btn-primary'}`}
                   disabled={isFull || booking}
-                  onClick={handleBooking}
+                  onClick={handleBookingClick}
                   data-testid="book-event-btn"
                 >
-                  {booking ? (
-                    <div className="spinner" />
-                  ) : isFull ? (
-                    'Betelt'
-                  ) : (
-                    'Foglalás'
-                  )}
+                  {isFull ? 'Betelt' : 'Foglalás'}
                 </Button>
-
-                {!user && (
-                  <p className="text-sm text-slate-500 text-center">
-                    A foglaláshoz <Link to="/login" className="text-[#2563EB] hover:underline">jelentkezz be</Link>
-                  </p>
-                )}
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
+
+      {/* Booking Modal */}
+      {showBookingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowBookingModal(false)}>
+          <Card className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <CardHeader>
+              <CardTitle>Foglalás - {event?.name}</CardTitle>
+              <CardDescription>Add meg az adataidat a foglaláshoz</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleGuestBooking} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="guest_name">Név *</Label>
+                  <Input 
+                    id="guest_name"
+                    value={guestData.guest_name} 
+                    onChange={(e) => setGuestData({...guestData, guest_name: e.target.value})}
+                    placeholder="Kovács Péter"
+                    required
+                    data-testid="booking-name-input"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="guest_email">Email cím *</Label>
+                  <Input 
+                    id="guest_email"
+                    type="email"
+                    value={guestData.guest_email} 
+                    onChange={(e) => setGuestData({...guestData, guest_email: e.target.value})}
+                    placeholder="pelda@email.hu"
+                    required
+                    data-testid="booking-email-input"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="guest_phone">Telefonszám</Label>
+                  <Input 
+                    id="guest_phone"
+                    type="tel"
+                    value={guestData.guest_phone} 
+                    onChange={(e) => setGuestData({...guestData, guest_phone: e.target.value})}
+                    placeholder="+36 30 123 4567"
+                    data-testid="booking-phone-input"
+                  />
+                </div>
+                <div className="bg-slate-50 rounded-lg p-4 text-sm text-slate-600">
+                  <p><strong>Esemény:</strong> {event?.name}</p>
+                  <p><strong>Időpont:</strong> {new Date(event?.event_date).toLocaleDateString('hu-HU', { 
+                    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                  })}</p>
+                </div>
+                <div className="flex gap-2 justify-end pt-4">
+                  <Button type="button" variant="outline" onClick={() => setShowBookingModal(false)}>
+                    Mégse
+                  </Button>
+                  <Button type="submit" className="btn-primary" disabled={booking} data-testid="booking-submit-btn">
+                    {booking ? <div className="spinner" /> : 'Foglalás megerősítése'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
