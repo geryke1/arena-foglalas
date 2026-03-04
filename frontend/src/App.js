@@ -878,13 +878,11 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen bg-slate-50">
+      <Header />
+      <div className="flex items-center justify-center px-4 pt-24 pb-12">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <Link to="/" className="inline-flex items-center justify-center gap-2 mb-4">
-            <Trophy className="h-10 w-10 text-[#2563EB]" />
-            <span className="font-bold text-2xl text-slate-900" style={{fontFamily: 'Manrope'}}>Aréna</span>
-          </Link>
           <CardTitle className="text-2xl" style={{fontFamily: 'Manrope'}}>Bejelentkezés</CardTitle>
           <CardDescription>Add meg az adataidat a belépéshez</CardDescription>
         </CardHeader>
