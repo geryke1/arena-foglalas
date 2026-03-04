@@ -2365,16 +2365,31 @@ const AdminBookingsPage = () => {
                         </Badge>
                       </td>
                       <td className="p-4">
-                        {booking.status === 'active' && (
-                          <Button 
-                            variant="destructive" 
-                            size="sm"
-                            onClick={() => handleCancel(booking.id)}
-                            data-testid={`cancel-admin-booking-${booking.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
+                        <div className="flex gap-2">
+                          {booking.status === 'active' && (
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              onClick={() => handleCancel(booking.id)}
+                              data-testid={`cancel-admin-booking-${booking.id}`}
+                              title="Lemondás"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {booking.status === 'cancelled' && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="text-red-600 border-red-600 hover:bg-red-50"
+                              onClick={() => setDeleteModal({ open: true, booking })}
+                              data-testid={`permanent-delete-booking-${booking.id}`}
+                              title="Végleges törlés"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -2382,6 +2397,41 @@ const AdminBookingsPage = () => {
               </table>
             </div>
           </Card>
+        )}
+
+        {/* Permanent Delete Modal */}
+        {deleteModal.open && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" data-testid="permanent-delete-modal">
+            <Card className="w-full max-w-md mx-4 p-6">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                  <Trash2 className="h-6 w-6 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Végleges törlés</h3>
+                <p className="text-slate-500 mb-6">
+                  Biztosan véglegesen törölni szeretnéd <strong>{deleteModal.booking?.user_name}</strong> foglalását a(z) <strong>{deleteModal.booking?.event_name}</strong> eseményre? 
+                  <br /><br />
+                  <span className="text-red-600 font-medium">Ez a művelet nem vonható vissza!</span>
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setDeleteModal({ open: false, booking: null })}
+                    data-testid="cancel-permanent-delete"
+                  >
+                    Mégse
+                  </Button>
+                  <Button 
+                    variant="destructive"
+                    onClick={handlePermanentDelete}
+                    data-testid="confirm-permanent-delete"
+                  >
+                    Végleges törlés
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
         )}
       </div>
     </AdminLayout>
