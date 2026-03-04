@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timedelta
 
 class ArenaBookingAPITester:
-    def __init__(self, base_url="https://arena-booking-3.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://booking-center-hu.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.admin_token = None
         self.user_token = None
