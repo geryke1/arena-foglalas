@@ -1184,7 +1184,8 @@ const RegisterPage = () => {
 const AdminLayout = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Default closed on mobile
 
   const menuItems = user?.role === 'admin' ? [
     { icon: LayoutDashboard, label: 'Áttekintés', path: '/admin' },
@@ -1201,6 +1202,16 @@ const AdminLayout = ({ children }) => {
     { icon: User, label: 'Profilom', path: '/admin/profile' },
   ];
 
+  // Close sidebar on mobile when route changes
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
+  const handleNavClick = (path) => {
+    setSidebarOpen(false);
+    navigate(path);
+  };
+
   return (
     <div className="min-h-screen bg-slate-100">
       {/* Mobile header */}
@@ -1213,13 +1224,21 @@ const AdminLayout = ({ children }) => {
             <Trophy className="h-6 w-6 text-[#2563EB]" />
             <span className="font-bold text-lg">Admin</span>
           </div>
-          <HeaderUserMenu />
+          <div className="w-10" /> {/* Spacer for centering */}
         </div>
       </div>
 
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden" 
+          onClick={() => setSidebarOpen(false)} 
+        />
+      )}
+
       {/* Sidebar */}
       <aside className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-slate-200 z-40 transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-        <div className="p-6 border-b border-slate-100">
+        <div className="p-6 border-b border-slate-100 hidden lg:block">
           <Link to="/" className="flex items-center gap-2">
             <Trophy className="h-8 w-8 text-[#2563EB]" />
             <span className="font-bold text-xl text-slate-900" style={{fontFamily: 'Manrope'}}>Aréna</span>
@@ -1228,26 +1247,41 @@ const AdminLayout = ({ children }) => {
             {user?.role === 'admin' ? 'Admin Panel' : 'Subadmin Panel'}
           </Badge>
         </div>
+
+        {/* Mobile sidebar header */}
+        <div className="p-6 border-b border-slate-100 lg:hidden pt-16">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#2563EB] flex items-center justify-center text-white font-bold">
+              {user?.name?.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p className="font-medium text-slate-900">{user?.name}</p>
+              <Badge variant="outline" className="mt-1">
+                {user?.role === 'admin' ? 'Admin' : 'Subadmin'}
+              </Badge>
+            </div>
+          </div>
+        </div>
         
         <nav className="p-4 space-y-1">
           {menuItems.map((item) => (
-            <Link
+            <button
               key={item.path}
-              to={item.path}
-              className={`sidebar-item ${window.location.pathname === item.path ? 'active' : ''}`}
+              onClick={() => handleNavClick(item.path)}
+              className={`sidebar-item w-full ${location.pathname === item.path ? 'active' : ''}`}
               data-testid={`sidebar-${item.label.toLowerCase().replace(/\s/g, '-')}`}
             >
               <item.icon className="h-5 w-5" />
               <span>{item.label}</span>
-            </Link>
+            </button>
           ))}
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100">
-          <Link to="/" className="sidebar-item mb-2">
+          <button onClick={() => handleNavClick('/')} className="sidebar-item w-full mb-2">
             <HomeIcon className="h-5 w-5" />
             <span>Vissza a főoldalra</span>
-          </Link>
+          </button>
           <button 
             onClick={() => { logout(); navigate('/'); }}
             className="sidebar-item text-red-600 hover:bg-red-50 w-full"
