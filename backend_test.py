@@ -347,6 +347,87 @@ class ArenaBookingAPITester:
         success, status, response = self.make_request('GET', 'admin/stats', token=self.user_token, expected_status=403)
         return self.log_test("User Unauthorized Admin", success, f"Status: {status}", 403, status)
 
+    def test_get_site_settings(self):
+        """Test getting site settings (public endpoint)"""
+        success, status, response = self.make_request('GET', 'settings', expected_status=200)
+        
+        if success and 'site_name' in response:
+            return self.log_test("Get Site Settings", True, f"Settings: {response.get('site_name', 'N/A')}")
+        else:
+            return self.log_test("Get Site Settings", False, f"Status: {status}, Response: {response}", 200, status)
+
+    def test_update_site_settings(self):
+        """Test updating site settings (admin only)"""
+        if not self.admin_token:
+            return self.log_test("Update Site Settings", False, "No admin token")
+        
+        settings_data = {
+            "site_name": "Test Aréna Updated",
+            "hero_title": "Test Sport, Koncertek, Élmények",
+            "hero_subtitle": "Test multifunkcionális sport- és rendezvényközpont",
+            "footer_text": "© 2024 Test Aréna. Minden jog fenntartva."
+        }
+        
+        success, status, response = self.make_request('PUT', 'admin/settings', settings_data, 
+                                                    token=self.admin_token, expected_status=200)
+        
+        if success and response.get('site_name') == settings_data['site_name']:
+            return self.log_test("Update Site Settings", True, f"Settings updated: {response.get('site_name')}")
+        else:
+            return self.log_test("Update Site Settings", False, f"Status: {status}, Response: {response}", 200, status)
+
+    def test_update_profile(self):
+        """Test updating user profile"""
+        if not self.admin_token:
+            return self.log_test("Update Profile", False, "No admin token")
+        
+        profile_data = {
+            "name": "Updated Admin Name",
+            "phone": "+36301111111"
+        }
+        
+        success, status, response = self.make_request('PUT', 'auth/profile', profile_data, 
+                                                    token=self.admin_token, expected_status=200)
+        
+        if success and response.get('name') == profile_data['name']:
+            return self.log_test("Update Profile", True, f"Profile updated: {response.get('name')}")
+        else:
+            return self.log_test("Update Profile", False, f"Status: {status}, Response: {response}", 200, status)
+
+    def test_update_profile_password(self):
+        """Test updating profile password"""
+        if not self.admin_token:
+            return self.log_test("Update Profile Password", False, "No admin token")
+        
+        profile_data = {
+            "current_password": "admin123",
+            "new_password": "newadmin123"
+        }
+        
+        success, status, response = self.make_request('PUT', 'auth/profile', profile_data, 
+                                                    token=self.admin_token, expected_status=200)
+        
+        if success:
+            # Test login with new password
+            login_data = {
+                "email": "admin@arena.hu", 
+                "password": "newadmin123"
+            }
+            login_success, login_status, login_response = self.make_request('POST', 'auth/login', login_data, expected_status=200)
+            
+            if login_success:
+                # Reset password back to original
+                reset_data = {
+                    "current_password": "newadmin123",
+                    "new_password": "admin123"
+                }
+                self.make_request('PUT', 'auth/profile', reset_data, token=self.admin_token, expected_status=200)
+                return self.log_test("Update Profile Password", True, "Password updated and verified")
+            else:
+                return self.log_test("Update Profile Password", False, "Password update failed verification")
+        else:
+            return self.log_test("Update Profile Password", False, f"Status: {status}, Response: {response}", 200, status)
+
     def run_all_tests(self):
         """Run all tests in sequence"""
         print("🚀 Starting Arena Booking API Tests...")
