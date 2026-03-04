@@ -1288,8 +1288,12 @@ const AdminLayout = ({ children }) => {
   }, [location.pathname]);
 
   const handleNavClick = (path) => {
+    // Close sidebar first, then navigate
     setSidebarOpen(false);
-    navigate(path);
+    // Small delay to ensure sidebar closes before navigation
+    setTimeout(() => {
+      navigate(path);
+    }, 50);
   };
 
   return (
