@@ -169,6 +169,7 @@ class SiteSettings(BaseModel):
     model_config = ConfigDict(extra="ignore")
     site_name: str = "Aréna"
     site_logo: Optional[str] = None
+    site_logo_size: int = 32  # Logo size in pixels (32-120)
     hero_title: str = "Sport, Koncertek, Élmények"
     hero_subtitle: str = "A város multifunkcionális sport- és rendezvényközpontja, 5000 fő férőhellyel"
     hero_image: Optional[str] = None
