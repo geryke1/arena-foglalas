@@ -1148,6 +1148,7 @@ const AdminSportsPage = () => {
   const [editingSport, setEditingSport] = useState(null);
   const [formData, setFormData] = useState({ name: '', description: '', image_url: '' });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchSports();
@@ -1168,6 +1169,33 @@ const AdminSportsPage = () => {
     setEditingSport(sport);
     setFormData(sport ? { name: sport.name, description: sport.description || '', image_url: sport.image_url || '' } : { name: '', description: '', image_url: '' });
     setShowModal(true);
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    const uploadData = new FormData();
+    uploadData.append('file', file);
+
+    try {
+      const res = await axios.post(`${API}/upload`, uploadData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setFormData({...formData, image_url: res.data.url});
+      toast.success("Kép feltöltve");
+    } catch (e) {
+      toast.error("Hiba a kép feltöltésekor");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${BACKEND_URL}${url}`;
   };
 
   const handleSubmit = async (e) => {
@@ -1232,7 +1260,7 @@ const AdminSportsPage = () => {
               <Card key={sport.id} className="overflow-hidden" data-testid={`admin-sport-${sport.id}`}>
                 <div className="relative h-40">
                   <img 
-                    src={sport.image_url || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}
+                    src={getImageUrl(sport.image_url) || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}
                     alt={sport.name}
                     className="w-full h-full object-cover"
                   />
@@ -1285,17 +1313,39 @@ const AdminSportsPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Kép URL</Label>
-                    <Input 
-                      value={formData.image_url} 
-                      onChange={(e) => setFormData({...formData, image_url: e.target.value})}
-                      placeholder="https://..."
-                      data-testid="sport-image-input"
-                    />
+                    <Label>Sport kép</Label>
+                    <div className="space-y-3">
+                      <Input 
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploading}
+                        data-testid="sport-image-upload"
+                      />
+                      {uploading && <p className="text-sm text-slate-500">Feltöltés...</p>}
+                      {formData.image_url && (
+                        <div className="relative">
+                          <img 
+                            src={getImageUrl(formData.image_url)}
+                            alt="Preview"
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                          <Button 
+                            type="button"
+                            variant="destructive" 
+                            size="sm" 
+                            className="absolute top-2 right-2"
+                            onClick={() => setFormData({...formData, image_url: ''})}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="flex gap-2 justify-end">
                     <Button type="button" variant="outline" onClick={() => setShowModal(false)}>Mégse</Button>
-                    <Button type="submit" className="btn-primary" disabled={saving} data-testid="sport-submit-btn">
+                    <Button type="submit" className="btn-primary" disabled={saving || uploading} data-testid="sport-submit-btn">
                       {saving ? 'Mentés...' : (editingSport ? 'Mentés' : 'Létrehozás')}
                     </Button>
                   </div>
