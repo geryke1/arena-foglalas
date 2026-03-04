@@ -600,7 +600,24 @@ async def create_guest_booking(booking_data: GuestBookingCreate):
             """
         )
     
-    return BookingResponse(**booking_doc)
+    # Create response with token for new users
+    booking_response = BookingResponse(**booking_doc)
+    
+    if is_new_user:
+        token = create_token(user_id, booking_data.guest_email, "user")
+        return GuestBookingResponse(
+            booking=booking_response,
+            token=token,
+            is_new_user=True,
+            generated_password=generated_password
+        )
+    else:
+        return GuestBookingResponse(
+            booking=booking_response,
+            token=None,
+            is_new_user=False,
+            generated_password=None
+        )
 
 @api_router.post("/bookings", response_model=BookingResponse)
 async def create_booking(booking_data: BookingCreate, user: dict = Depends(get_current_user)):
