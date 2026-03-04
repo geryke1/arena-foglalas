@@ -400,17 +400,18 @@ class ArenaBookingAPITester:
         if not success:
             return self.log_test("Guest Booking Creates User Account", False, f"Guest booking failed. Status: {status}", 200, status)
         
-        # Try to login with the created account (should fail without password)
-        login_data = {
-            "email": guest_email,
-            "password": "wrongpassword"
-        }
-        login_success, login_status, login_response = self.make_request('POST', 'auth/login', login_data, expected_status=401)
+        # Check if response contains token and generated_password for new users
+        booking_data = response.get('booking', {})
+        is_new_user = response.get('is_new_user', False)
+        token = response.get('token')
+        generated_password = response.get('generated_password')
         
-        if login_success:  # Should fail with wrong password, but user should exist
-            return self.log_test("Guest Booking Creates User Account", True, "User account created - login attempted with wrong password correctly failed")
+        if is_new_user and token and generated_password:
+            return self.log_test("Guest Booking Creates User Account", True, f"New user created with auto-login token and generated password: {generated_password[:5]}...")
+        elif not is_new_user:
+            return self.log_test("Guest Booking Creates User Account", True, "Existing user booking - no token/password returned (correct behavior)")
         else:
-            return self.log_test("Guest Booking Creates User Account", True, "User account created and login protection working")
+            return self.log_test("Guest Booking Creates User Account", False, f"Missing token or generated_password for new user. is_new_user: {is_new_user}, has_token: {bool(token)}, has_password: {bool(generated_password)}")
 
     def test_guest_booking_existing_user(self):
         """Test guest booking with existing user email"""
