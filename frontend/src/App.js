@@ -540,8 +540,23 @@ const EventDetailsPage = () => {
     return `${BACKEND_URL}${url}`;
   };
 
-  const handleBookingClick = () => {
-    setShowBookingModal(true);
+  const handleBookingClick = async () => {
+    // If user is logged in, book directly
+    if (user) {
+      setBooking(true);
+      try {
+        await axios.post(`${API}/bookings`, { event_id: eventId });
+        toast.success("Sikeres foglalás! Visszaigazoló emailt küldtünk.");
+        navigate('/my-bookings');
+      } catch (e) {
+        toast.error(e.response?.data?.detail || "Hiba történt a foglalás során");
+      } finally {
+        setBooking(false);
+      }
+    } else {
+      // Guest user - show modal
+      setShowBookingModal(true);
+    }
   };
 
   const handleGuestBooking = async (e) => {
@@ -552,10 +567,10 @@ const EventDetailsPage = () => {
         event_id: eventId,
         ...guestData 
       });
-      toast.success("Sikeres foglalás! Visszaigazoló emailt küldtünk.");
+      toast.success("Sikeres foglalás! Elküldtük a visszaigazolást és a belépési adatokat emailben.");
       setShowBookingModal(false);
       setGuestData({ guest_name: '', guest_email: '', guest_phone: '' });
-      fetchEvent();
+      navigate('/login');
     } catch (e) {
       toast.error(e.response?.data?.detail || "Hiba történt a foglalás során");
     } finally {
