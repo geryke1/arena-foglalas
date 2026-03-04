@@ -107,20 +107,21 @@ class ArenaBookingAPITester:
         else:
             return self.log_test("User Registration", False, f"Status: {status}, Response: {response}", 200, status)
 
-    def test_user_login(self):
-        """Test user login with registered user"""
-        if not self.test_user_id:
-            return self.log_test("User Login", False, "No test user created")
-        
-        # Extract email from registration
-        timestamp = datetime.now().strftime("%H%M%S")
+    def test_regular_user_login(self):
+        """Test regular user login with provided credentials"""
         login_data = {
-            "email": f"testuser{timestamp}@test.hu",
-            "password": "testpass123"
+            "email": "tesztuser123@test.com",
+            "password": "test1234"
         }
         
         success, status, response = self.make_request('POST', 'auth/login', login_data, expected_status=200)
-        return self.log_test("User Login", success, f"Status: {status}", 200, status)
+        
+        if success and 'token' in response:
+            self.user_token = response['token']  # Update user token for further tests
+            user_role = response.get('user', {}).get('role', 'unknown')
+            return self.log_test("Regular User Login", True, f"User logged in: {response.get('user', {}).get('name', 'N/A')}, Role: {user_role}")
+        else:
+            return self.log_test("Regular User Login", False, f"Status: {status}, Response: {response}", 200, status)
 
     def test_get_me(self):
         """Test get current user info"""
