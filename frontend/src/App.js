@@ -614,11 +614,13 @@ const SportEventsPage = () => {
 const EventDetailsPage = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loginWithToken } = useAuth();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState('');
   const [guestData, setGuestData] = useState({ guest_name: '', guest_email: '', guest_phone: '' });
 
   useEffect(() => {
@@ -666,18 +668,39 @@ const EventDetailsPage = () => {
     e.preventDefault();
     setBooking(true);
     try {
-      await axios.post(`${API}/bookings/guest`, { 
+      const response = await axios.post(`${API}/bookings/guest`, { 
         event_id: eventId,
         ...guestData 
       });
-      toast.success("Sikeres foglalás! Elküldtük a visszaigazolást és a belépési adatokat emailben.");
+      
+      toast.success("Sikeres foglalás!");
       setShowBookingModal(false);
+      
+      // If new user was created, log them in automatically
+      if (response.data.is_new_user && response.data.token) {
+        await loginWithToken(response.data.token);
+        setGeneratedPassword(response.data.generated_password);
+        setShowPasswordModal(true);
+      } else {
+        // Existing user - just redirect
+        toast.info("A foglalás visszaigazolását elküldtük emailben.");
+        navigate('/my-bookings');
+      }
+      
       setGuestData({ guest_name: '', guest_email: '', guest_phone: '' });
-      navigate('/login');
     } catch (e) {
       toast.error(e.response?.data?.detail || "Hiba történt a foglalás során");
     } finally {
       setBooking(false);
+    }
+  };
+
+  const handlePasswordModalClose = (changePassword) => {
+    setShowPasswordModal(false);
+    if (changePassword) {
+      navigate('/profile');
+    } else {
+      navigate('/my-bookings');
     }
   };
 
