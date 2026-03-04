@@ -465,7 +465,10 @@ class ArenaBookingAPITester:
         success, status, response = self.make_request('GET', 'settings', expected_status=200)
         
         if success and 'site_name' in response:
-            return self.log_test("Get Site Settings", True, f"Settings: {response.get('site_name', 'N/A')}")
+            # Check if site_logo_size field is present (new feature)
+            has_logo_size = 'site_logo_size' in response
+            logo_size_value = response.get('site_logo_size', 'N/A')
+            return self.log_test("Get Site Settings", True, f"Settings: {response.get('site_name', 'N/A')}, Logo Size: {logo_size_value}, Has Logo Size Field: {has_logo_size}")
         else:
             return self.log_test("Get Site Settings", False, f"Status: {status}, Response: {response}", 200, status)
 
