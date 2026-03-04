@@ -479,6 +479,7 @@ class ArenaBookingAPITester:
         
         settings_data = {
             "site_name": "Test Aréna Updated",
+            "site_logo_size": 64,  # Test logo size setting (24-120px range)
             "hero_title": "Test Sport, Koncertek, Élmények",
             "hero_subtitle": "Test multifunkcionális sport- és rendezvényközpont",
             "footer_text": "© 2024 Test Aréna. Minden jog fenntartva."
@@ -488,7 +489,8 @@ class ArenaBookingAPITester:
                                                     token=self.admin_token, expected_status=200)
         
         if success and response.get('site_name') == settings_data['site_name']:
-            return self.log_test("Update Site Settings", True, f"Settings updated: {response.get('site_name')}")
+            logo_size_updated = response.get('site_logo_size') == settings_data['site_logo_size']
+            return self.log_test("Update Site Settings", True, f"Settings updated: {response.get('site_name')}, Logo Size Updated: {logo_size_updated} ({response.get('site_logo_size')}px)")
         else:
             return self.log_test("Update Site Settings", False, f"Status: {status}, Response: {response}", 200, status)
 
