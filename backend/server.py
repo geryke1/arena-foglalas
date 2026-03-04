@@ -144,6 +144,13 @@ class BookingResponse(BaseModel):
     status: str  # active, cancelled
     created_at: str
 
+class GuestBookingResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    booking: BookingResponse
+    token: Optional[str] = None  # JWT token if new user was created
+    is_new_user: bool = False
+    generated_password: Optional[str] = None  # Only returned for new users
+
 class SubadminCreate(BaseModel):
     email: EmailStr
     name: str
