@@ -123,6 +123,13 @@ class BookingBase(BaseModel):
 class BookingCreate(BookingBase):
     pass
 
+class GuestBookingCreate(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    event_id: str
+    guest_name: str
+    guest_email: EmailStr
+    guest_phone: Optional[str] = None
+
 class BookingResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
