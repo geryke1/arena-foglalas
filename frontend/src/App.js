@@ -2181,6 +2181,7 @@ const AdminSettingsPage = () => {
   const [settings, setSettings] = useState({
     site_name: 'Aréna',
     site_logo: '',
+    site_logo_size: 32,
     hero_title: 'Sport, Koncertek, Élmények',
     hero_subtitle: 'A város multifunkcionális sport- és rendezvényközpontja, 5000 fő férőhellyel',
     hero_image: '',
