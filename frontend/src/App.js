@@ -2483,6 +2483,16 @@ function App() {
               <AdminBookingsPage />
             </ProtectedRoute>
           } />
+          <Route path="/admin/settings" element={
+            <ProtectedRoute roles={['admin']}>
+              <AdminSettingsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/profile" element={
+            <ProtectedRoute roles={['admin', 'subadmin']}>
+              <AdminProfilePage />
+            </ProtectedRoute>
+          } />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" />} />
