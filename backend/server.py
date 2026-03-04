@@ -663,6 +663,11 @@ async def init_admin():
     await db.users.insert_one(admin_doc)
     return MessageResponse(message="Admin létrehozva: admin@arena.hu / admin123")
 
+# Add your routes to the router instead of directly to app
+@api_router.get("/")
+async def root():
+    return {"message": "Aréna Booking API"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
