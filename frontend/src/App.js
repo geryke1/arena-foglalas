@@ -2033,6 +2033,409 @@ const AdminBookingsPage = () => {
   );
 };
 
+// ==================== ADMIN SETTINGS PAGE ====================
+
+const AdminSettingsPage = () => {
+  const [settings, setSettings] = useState({
+    site_name: 'Aréna',
+    site_logo: '',
+    hero_title: 'Sport, Koncertek, Élmények',
+    hero_subtitle: 'A város multifunkcionális sport- és rendezvényközpontja, 5000 fő férőhellyel',
+    hero_image: '',
+    footer_text: '© 2024 Aréna Sport- és Rendezvényközpont. Minden jog fenntartva.',
+    footer_logo: ''
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState({});
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/settings`);
+      setSettings(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (e, field) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading({...uploading, [field]: true});
+    const uploadData = new FormData();
+    uploadData.append('file', file);
+
+    try {
+      const res = await axios.post(`${API}/upload`, uploadData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setSettings({...settings, [field]: res.data.url});
+      toast.success("Kép feltöltve");
+    } catch (e) {
+      toast.error("Hiba a kép feltöltésekor");
+    } finally {
+      setUploading({...uploading, [field]: false});
+    }
+  };
+
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${BACKEND_URL}${url}`;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await axios.put(`${API}/admin/settings`, settings);
+      toast.success("Beállítások mentve");
+    } catch (e) {
+      toast.error("Hiba történt");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <AdminLayout><LoadingScreen /></AdminLayout>;
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6 max-w-4xl">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900" style={{fontFamily: 'Manrope'}}>Oldal beállítások</h1>
+          <p className="text-slate-500 mt-1">Testreszabhatod az oldal megjelenését</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* General Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Általános beállítások
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Oldal neve</Label>
+                  <Input 
+                    value={settings.site_name} 
+                    onChange={(e) => setSettings({...settings, site_name: e.target.value})}
+                    placeholder="Aréna"
+                    data-testid="settings-site-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Oldal logó</Label>
+                  <Input 
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e, 'site_logo')}
+                    disabled={uploading.site_logo}
+                    data-testid="settings-site-logo-upload"
+                  />
+                  {settings.site_logo && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <img src={getImageUrl(settings.site_logo)} alt="Logo" className="h-10 w-10 object-contain rounded" />
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setSettings({...settings, site_logo: ''})}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Hero Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Image className="h-5 w-5" />
+                Kezdőoldal - Hero szekció
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Főcím</Label>
+                <Input 
+                  value={settings.hero_title} 
+                  onChange={(e) => setSettings({...settings, hero_title: e.target.value})}
+                  placeholder="Sport, Koncertek, Élmények"
+                  data-testid="settings-hero-title"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Alcím</Label>
+                <Input 
+                  value={settings.hero_subtitle} 
+                  onChange={(e) => setSettings({...settings, hero_subtitle: e.target.value})}
+                  placeholder="A város multifunkcionális sport- és rendezvényközpontja"
+                  data-testid="settings-hero-subtitle"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Háttérkép</Label>
+                <Input 
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, 'hero_image')}
+                  disabled={uploading.hero_image}
+                  data-testid="settings-hero-image-upload"
+                />
+                {settings.hero_image && (
+                  <div className="relative mt-2">
+                    <img src={getImageUrl(settings.hero_image)} alt="Hero" className="w-full h-40 object-cover rounded-lg" />
+                    <Button 
+                      type="button" 
+                      variant="destructive" 
+                      size="sm" 
+                      className="absolute top-2 right-2"
+                      onClick={() => setSettings({...settings, hero_image: ''})}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Footer Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FolderOpen className="h-5 w-5" />
+                Lábléc
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Lábléc szöveg</Label>
+                <Input 
+                  value={settings.footer_text} 
+                  onChange={(e) => setSettings({...settings, footer_text: e.target.value})}
+                  placeholder="© 2024 Aréna Sport- és Rendezvényközpont. Minden jog fenntartva."
+                  data-testid="settings-footer-text"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Lábléc logó (opcionális)</Label>
+                <Input 
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, 'footer_logo')}
+                  disabled={uploading.footer_logo}
+                  data-testid="settings-footer-logo-upload"
+                />
+                {settings.footer_logo && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <img src={getImageUrl(settings.footer_logo)} alt="Footer Logo" className="h-10 w-10 object-contain rounded" />
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setSettings({...settings, footer_logo: ''})}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end">
+            <Button type="submit" className="btn-primary" disabled={saving} data-testid="settings-save-btn">
+              {saving ? 'Mentés...' : 'Beállítások mentése'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </AdminLayout>
+  );
+};
+
+// ==================== ADMIN PROFILE PAGE ====================
+
+const AdminProfilePage = () => {
+  const { user, refreshUser, logout } = useAuth();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    current_password: '',
+    new_password: '',
+    confirm_password: ''
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || ''
+      }));
+    }
+  }, [user]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (formData.new_password && formData.new_password !== formData.confirm_password) {
+      toast.error("Az új jelszavak nem egyeznek");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const updateData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone
+      };
+      
+      if (formData.new_password) {
+        updateData.current_password = formData.current_password;
+        updateData.new_password = formData.new_password;
+      }
+
+      await axios.put(`${API}/auth/profile`, updateData);
+      toast.success("Profil frissítve");
+      
+      // If email changed, need to re-login
+      if (formData.email !== user.email) {
+        toast.info("Az email cím megváltozott, kérjük jelentkezz be újra");
+        logout();
+        navigate('/login');
+      } else {
+        await refreshUser();
+        setFormData(prev => ({
+          ...prev,
+          current_password: '',
+          new_password: '',
+          confirm_password: ''
+        }));
+      }
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Hiba történt");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6 max-w-2xl">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900" style={{fontFamily: 'Manrope'}}>Profilom</h1>
+          <p className="text-slate-500 mt-1">Szerkeszd a fiókod adatait</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Personal Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Személyes adatok
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Név</Label>
+                <Input 
+                  value={formData.name} 
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
+                  data-testid="profile-name-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input 
+                  type="email"
+                  value={formData.email} 
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  required
+                  data-testid="profile-email-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Telefonszám</Label>
+                <Input 
+                  type="tel"
+                  value={formData.phone} 
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  placeholder="+36 30 123 4567"
+                  data-testid="profile-phone-input"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Password Change */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                Jelszó módosítása
+              </CardTitle>
+              <CardDescription>Hagyd üresen ha nem szeretnéd módosítani</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Jelenlegi jelszó</Label>
+                <Input 
+                  type="password"
+                  value={formData.current_password} 
+                  onChange={(e) => setFormData({...formData, current_password: e.target.value})}
+                  data-testid="profile-current-password-input"
+                />
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Új jelszó</Label>
+                  <Input 
+                    type="password"
+                    value={formData.new_password} 
+                    onChange={(e) => setFormData({...formData, new_password: e.target.value})}
+                    minLength={6}
+                    data-testid="profile-new-password-input"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Új jelszó megerősítése</Label>
+                  <Input 
+                    type="password"
+                    value={formData.confirm_password} 
+                    onChange={(e) => setFormData({...formData, confirm_password: e.target.value})}
+                    minLength={6}
+                    data-testid="profile-confirm-password-input"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end">
+            <Button type="submit" className="btn-primary" disabled={saving} data-testid="profile-save-btn">
+              {saving ? 'Mentés...' : 'Profil mentése'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </AdminLayout>
+  );
+};
+
 // ==================== MAIN APP ====================
 
 function App() {
