@@ -390,53 +390,6 @@ const HomePage = () => {
   );
 };
 
-// User Menu Dropdown
-const UserMenu = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
-        data-testid="user-menu-btn"
-      >
-        <div className="w-8 h-8 rounded-full bg-[#2563EB] flex items-center justify-center text-white font-medium">
-          {user?.name?.charAt(0).toUpperCase()}
-        </div>
-        <span className="text-sm font-medium text-slate-700 hidden sm:block">{user?.name}</span>
-      </button>
-      
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 z-50 overflow-hidden">
-            <div className="p-4 border-b border-slate-100">
-              <p className="font-medium text-slate-900">{user?.name}</p>
-              <p className="text-sm text-slate-500">{user?.email}</p>
-              <Badge className="mt-2" variant="secondary">
-                {user?.role === 'admin' ? 'Admin' : user?.role === 'subadmin' ? 'Subadmin' : 'Felhasználó'}
-              </Badge>
-            </div>
-            <div className="p-2">
-              <button
-                onClick={() => { logout(); navigate('/'); setOpen(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                data-testid="logout-btn"
-              >
-                <LogOut className="h-4 w-4" />
-                Kijelentkezés
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
 // Sport Events Page
 const SportEventsPage = () => {
   const { sportId } = useParams();
