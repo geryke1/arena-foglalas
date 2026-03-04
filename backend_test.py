@@ -515,6 +515,11 @@ class ArenaBookingAPITester:
         self.test_get_my_bookings()
         self.test_admin_get_bookings()
         
+        # Guest booking tests (new feature)
+        self.test_guest_booking_create()
+        self.test_guest_booking_required_fields()
+        self.test_guest_booking_optional_phone()
+        
         # Subadmin tests
         self.test_create_subadmin()
         self.test_get_subadmins()
