@@ -102,8 +102,15 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithToken = async (newToken) => {
+    localStorage.setItem("token", newToken);
+    axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+    setToken(newToken);
+    await fetchUser();
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser, loginWithToken }}>
       {children}
     </AuthContext.Provider>
   );
