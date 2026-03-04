@@ -7,7 +7,7 @@ Multifunkcionális sport- és rendezvényközpont online foglalási rendszere, a
 1. **Vendég** - Böngészi a sportokat és eseményeket
 2. **Regisztrált felhasználó** - Foglal helyeket eseményekre
 3. **Subadmin** - Kezeli a hozzárendelt sportok eseményeit és foglalásait
-4. **Admin** - Teljes rendszerfelügyelet (sportok, események, subadminok)
+4. **Admin** - Teljes rendszerfelügyelet (sportok, események, subadminok, beállítások)
 
 ## Alapvető Követelmények
 - Magyar nyelvű felület
@@ -15,48 +15,41 @@ Multifunkcionális sport- és rendezvényközpont online foglalási rendszere, a
 - Regisztráció alapú foglalás (fizetés nélkül)
 - SMTP email értesítések (konfigurálható)
 
-## Implementált Funkciók (2024.01.02)
+## Implementált Funkciók
 
-### Nyilvános oldalak
+### V1.0 (2024.01.02)
 - ✅ Főoldal sport kategóriákkal
 - ✅ Sport események oldal
 - ✅ Esemény részletek oldal foglalással
 - ✅ Bejelentkezés / Regisztráció
-
-### Felhasználói funkciók
-- ✅ Foglalás leadása
-- ✅ Saját foglalások listázása
-- ✅ Foglalás lemondása
-
-### Admin Panel
-- ✅ Dashboard statisztikákkal
-- ✅ Sportok CRUD (létrehozás, módosítás, törlés)
-- ✅ Események CRUD (borítókép feltöltéssel)
-- ✅ Subadminok kezelése (sport hozzárendeléssel)
-- ✅ Foglalások adminisztrálása
-
-### Subadmin Panel
-- ✅ Saját sportok eseményeinek kezelése
-- ✅ Saját sportok foglalásainak adminisztrálása
-
-### Technikai
+- ✅ Foglalás leadása, listázása, lemondása
+- ✅ Admin Dashboard statisztikákkal
+- ✅ Sportok, Események, Subadminok CRUD
 - ✅ JWT alapú authentikáció
-- ✅ Szerepkör alapú jogosultságkezelés
-- ✅ Képfeltöltés helyi tárolással
-- ✅ Email küldés SMTP-vel (konfiguráció szükséges)
+
+### V1.1 (2024.01.02) - Új funkciók
+- ✅ **Admin profil szerkesztés** - Név, email, telefonszám, jelszó módosítás
+- ✅ **Sport képfeltöltés** - Fájl feltöltés szerverre (nem URL link)
+- ✅ **Oldal beállítások** (csak admin):
+  - Oldal neve
+  - Oldal logó (feltöltés)
+  - Hero szekció: főcím, alcím, háttérkép (feltöltés)
+  - Lábléc szöveg, logó (feltöltés)
 
 ## Architektúra
 - **Backend**: FastAPI (Python)
 - **Frontend**: React + Tailwind CSS + Shadcn/UI
 - **Adatbázis**: MongoDB
 - **Auth**: JWT token (7 napos lejárat)
+- **Képtárolás**: Helyi szerver (/uploads mappa)
 
 ## API Végpontok
-- `/api/auth/*` - Authentikáció
+- `/api/auth/*` - Authentikáció (beleértve profil frissítés)
 - `/api/sports` - Sport kategóriák
 - `/api/events` - Események
 - `/api/bookings` - Foglalások
 - `/api/admin/*` - Admin műveletek
+- `/api/settings` - Oldal beállítások
 - `/api/upload` - Képfeltöltés
 
 ## Alapértelmezett Admin Belépés
@@ -67,11 +60,12 @@ Multifunkcionális sport- és rendezvényközpont online foglalási rendszere, a
 
 ### P0 - Kritikus
 - ✅ Minden alapfunkció implementálva
+- ✅ Admin profil és jelszó módosítás
+- ✅ Oldal testreszabás
 
 ### P1 - Fontos
 - [ ] SMTP konfiguráció UI-ból
-- [ ] Jelszó visszaállítás
-- [ ] Felhasználói profil szerkesztés
+- [ ] Jelszó visszaállítás (elfelejtett jelszó)
 
 ### P2 - Kívánatos
 - [ ] Esemény keresés/szűrés
@@ -81,5 +75,5 @@ Multifunkcionális sport- és rendezvényközpont online foglalási rendszere, a
 
 ## Következő Lépések
 1. SMTP beállítások megadása email értesítésekhez
-2. Sportok és események hozzáadása az admin felületen
-3. Subadminok létrehozása szükség szerint
+2. Sportok és események hozzáadása (képfeltöltéssel)
+3. Oldal testreszabása a Beállítások menüben
