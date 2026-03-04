@@ -461,6 +461,12 @@ class ArenaBookingAPITester:
         self.test_create_subadmin()
         self.test_get_subadmins()
         
+        # New features tests (Profile & Settings)
+        self.test_get_site_settings()
+        self.test_update_site_settings()
+        self.test_update_profile()
+        self.test_update_profile_password()
+        
         # Security tests
         self.test_unauthorized_access()
         self.test_user_unauthorized_admin()
