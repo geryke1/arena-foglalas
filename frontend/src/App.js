@@ -1374,7 +1374,7 @@ const AdminLayout = ({ children }) => {
       </aside>
 
       {/* Main content */}
-      <main className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : ''} pt-16 lg:pt-0`}>
+      <main className="transition-all duration-300 pt-16 lg:pt-0 lg:ml-64">
         <div className="p-6 lg:p-8">
           {children}
         </div>
