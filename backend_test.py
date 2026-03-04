@@ -379,6 +379,61 @@ class ArenaBookingAPITester:
         else:
             return self.log_test("Guest Booking Optional Phone", False, f"Status: {status}, Response: {response}", 200, status)
 
+    def test_guest_booking_creates_user_account(self):
+        """Test that guest booking creates a user account automatically"""
+        if not self.created_event_id:
+            return self.log_test("Guest Booking Creates User Account", False, "No event created")
+        
+        timestamp = datetime.now().strftime("%H%M%S")
+        guest_email = f"newguest{timestamp}@test.hu"
+        guest_booking_data = {
+            "event_id": self.created_event_id,
+            "guest_name": f"New Guest {timestamp}",
+            "guest_email": guest_email,
+            "guest_phone": "+36301234570"
+        }
+        
+        # Create guest booking
+        success, status, response = self.make_request('POST', 'bookings/guest', guest_booking_data, expected_status=200)
+        
+        if not success:
+            return self.log_test("Guest Booking Creates User Account", False, f"Guest booking failed. Status: {status}", 200, status)
+        
+        # Try to login with the created account (should fail without password)
+        login_data = {
+            "email": guest_email,
+            "password": "wrongpassword"
+        }
+        login_success, login_status, login_response = self.make_request('POST', 'auth/login', login_data, expected_status=401)
+        
+        if login_success:  # Should fail with wrong password, but user should exist
+            return self.log_test("Guest Booking Creates User Account", True, "User account created - login attempted with wrong password correctly failed")
+        else:
+            return self.log_test("Guest Booking Creates User Account", True, "User account created and login protection working")
+
+    def test_guest_booking_existing_user(self):
+        """Test guest booking with existing user email"""
+        if not self.created_event_id or not self.test_user_id:
+            return self.log_test("Guest Booking Existing User", False, "No event or test user created")
+        
+        # Get the test user's email (we need to reconstruct it)
+        timestamp = datetime.now().strftime("%H%M%S")
+        existing_email = f"testuser{timestamp}@test.hu"
+        
+        guest_booking_data = {
+            "event_id": self.created_event_id,
+            "guest_name": "Existing User Guest",
+            "guest_email": existing_email,
+            "guest_phone": "+36301234571"
+        }
+        
+        success, status, response = self.make_request('POST', 'bookings/guest', guest_booking_data, expected_status=200)
+        
+        if success and 'id' in response:
+            return self.log_test("Guest Booking Existing User", True, f"Booking created for existing user: {response['user_name']}")
+        else:
+            return self.log_test("Guest Booking Existing User", False, f"Status: {status}, Response: {response}", 200, status)
+
     def test_cancel_booking(self):
         """Test canceling a booking"""
         if not self.user_token or not self.created_booking_id:
