@@ -143,13 +143,21 @@ const Header = () => {
     return `${BACKEND_URL}${url}`;
   };
 
+  const logoSize = settings?.site_logo_size || 32;
+  const headerHeight = Math.max(64, logoSize + 24); // min 64px, logo + padding
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black" style={{ height: `${headerHeight}px` }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div className="flex items-center justify-between h-full">
+          <Link to="/" className="flex items-center gap-3">
             {settings?.site_logo ? (
-              <img src={getImageUrl(settings.site_logo)} alt="Logo" className="h-8 w-8 object-contain" />
+              <img 
+                src={getImageUrl(settings.site_logo)} 
+                alt="Logo" 
+                style={{ height: `${logoSize}px`, width: 'auto' }}
+                className="object-contain" 
+              />
             ) : (
               <Trophy className="h-8 w-8 text-[#2563EB]" />
             )}
@@ -172,6 +180,12 @@ const Header = () => {
                   <Button variant="outline" className="rounded-full border-white/30 text-white hover:bg-white/10" data-testid="my-bookings-btn">
                     <BookOpen className="h-4 w-4 mr-2" />
                     Foglalásaim
+                  </Button>
+                </Link>
+                <Link to="/profile">
+                  <Button variant="outline" className="rounded-full border-white/30 text-white hover:bg-white/10" data-testid="profile-btn">
+                    <User className="h-4 w-4 mr-2" />
+                    Profilom
                   </Button>
                 </Link>
                 <HeaderUserMenu />
