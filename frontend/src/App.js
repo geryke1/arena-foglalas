@@ -813,7 +813,13 @@ const RegisterPage = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) navigate('/');
+    if (user) {
+      if (user.role === 'admin' || user.role === 'subadmin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
+    }
   }, [user, navigate]);
 
   const handleSubmit = async (e) => {
