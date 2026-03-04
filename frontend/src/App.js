@@ -1039,6 +1039,7 @@ const RegisterPage = () => {
           </p>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };
