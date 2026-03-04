@@ -724,6 +724,25 @@ async def get_all_bookings(event_id: Optional[str] = None, user: dict = Depends(
     bookings = await db.bookings.find(query, {"_id": 0}).to_list(1000)
     return [BookingResponse(**b) for b in bookings]
 
+@api_router.delete("/admin/bookings/{booking_id}/permanent", response_model=MessageResponse)
+async def delete_booking_permanently(booking_id: str, user: dict = Depends(get_admin_user)):
+    """Permanently delete a cancelled booking from the system"""
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Foglalás nem található")
+    
+    # Only allow deleting cancelled bookings
+    if booking["status"] != "cancelled":
+        raise HTTPException(status_code=400, detail="Csak lemondott foglalás törölhető véglegesen")
+    
+    # Subadmin can only delete for assigned sports
+    if user["role"] == "subadmin" and booking["sport_id"] not in user.get("assigned_sports", []):
+        raise HTTPException(status_code=403, detail="Nincs jogosultság ehhez a foglaláshoz")
+    
+    await db.bookings.delete_one({"id": booking_id})
+    
+    return MessageResponse(message="Foglalás véglegesen törölve")
+
 # ==================== SUBADMIN ROUTES ====================
 
 @api_router.get("/admin/subadmins", response_model=List[UserResponse])
