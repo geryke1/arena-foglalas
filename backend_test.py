@@ -376,8 +376,9 @@ class ArenaBookingAPITester:
         
         success, status, response = self.make_request('POST', 'bookings/guest', guest_booking_data, expected_status=200)
         
-        if success and 'id' in response:
-            return self.log_test("Guest Booking Optional Phone", True, f"Guest booking created without phone: {response['user_name']}")
+        if success and 'booking' in response:
+            booking = response['booking']
+            return self.log_test("Guest Booking Optional Phone", True, f"Guest booking created without phone: {booking['user_name']}")
         else:
             return self.log_test("Guest Booking Optional Phone", False, f"Status: {status}, Response: {response}", 200, status)
 
