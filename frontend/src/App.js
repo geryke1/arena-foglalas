@@ -902,6 +902,56 @@ const EventDetailsPage = () => {
           </Card>
         </div>
       )}
+
+      {/* Password Change Modal - shown after automatic account creation */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Activity className="h-8 w-8 text-green-600" />
+              </div>
+              <CardTitle>Sikeres foglalás!</CardTitle>
+              <CardDescription>A fiókod automatikusan létrejött</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Key className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-amber-800">Automatikusan generált jelszó:</p>
+                    <p className="font-mono text-lg text-amber-900 mt-1 bg-amber-100 px-2 py-1 rounded">{generatedPassword}</p>
+                    <p className="text-amber-700 text-sm mt-2">Ezt a jelszót emailben is elküldtük neked.</p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-slate-600 text-sm text-center">
+                Szeretnéd most megváltoztatni a jelszavadat, vagy használod az automatikusan generáltat?
+              </p>
+
+              <div className="flex flex-col gap-2">
+                <Button 
+                  className="btn-primary w-full"
+                  onClick={() => handlePasswordModalClose(true)}
+                  data-testid="change-password-btn"
+                >
+                  <Key className="h-4 w-4 mr-2" />
+                  Jelszó megváltoztatása
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => handlePasswordModalClose(false)}
+                  data-testid="keep-password-btn"
+                >
+                  Maradok a generált jelszónál
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
