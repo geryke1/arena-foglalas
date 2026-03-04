@@ -682,8 +682,20 @@ const EventDetailsPage = () => {
                   onClick={handleBookingClick}
                   data-testid="book-event-btn"
                 >
-                  {isFull ? 'Betelt' : 'Foglalás'}
+                  {booking ? (
+                    <div className="spinner" />
+                  ) : isFull ? (
+                    'Betelt'
+                  ) : (
+                    'Foglalás'
+                  )}
                 </Button>
+                
+                {user && (
+                  <p className="text-sm text-slate-500 text-center">
+                    Bejelentkezve mint: <span className="font-medium">{user.name}</span>
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
