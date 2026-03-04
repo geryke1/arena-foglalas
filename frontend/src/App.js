@@ -1079,7 +1079,7 @@ const AdminLayout = ({ children }) => {
             <Trophy className="h-6 w-6 text-[#2563EB]" />
             <span className="font-bold text-lg">Admin</span>
           </div>
-          <UserMenu />
+          <HeaderUserMenu />
         </div>
       </div>
 
