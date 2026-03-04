@@ -338,7 +338,7 @@ const HomePage = () => {
                     style={{ animationDelay: `${idx * 0.1}s` }}
                     data-testid={`sport-card-${sport.id}`}
                   >
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative h-72 overflow-hidden">
                       <img 
                         src={getImageUrl(sport.image_url) || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBzcG9ydHMlMjBhcmVuYSUyMGV4dGVyaW9yJTIwc3VubnklMjBkYXl8ZW58MHx8fHwxNzcyNjM5Nzc1fDA&ixlib=rb-4.1.0&q=85'}
                         alt={sport.name}
