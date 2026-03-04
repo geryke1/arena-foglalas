@@ -2247,6 +2247,7 @@ const AdminBookingsPage = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterEvent, setFilterEvent] = useState('');
+  const [deleteModal, setDeleteModal] = useState({ open: false, booking: null });
 
   useEffect(() => {
     fetchData();
@@ -2274,13 +2275,25 @@ const AdminBookingsPage = () => {
   };
 
   const handleCancel = async (bookingId) => {
-    if (!window.confirm('Biztosan törölni szeretnéd a foglalást?')) return;
+    if (!window.confirm('Biztosan le szeretnéd mondani a foglalást?')) return;
     try {
       await axios.delete(`${API}/bookings/${bookingId}`);
-      toast.success("Foglalás törölve");
+      toast.success("Foglalás lemondva");
       fetchData();
     } catch (e) {
       toast.error("Hiba történt");
+    }
+  };
+
+  const handlePermanentDelete = async () => {
+    if (!deleteModal.booking) return;
+    try {
+      await axios.delete(`${API}/admin/bookings/${deleteModal.booking.id}/permanent`);
+      toast.success("Foglalás véglegesen törölve");
+      setDeleteModal({ open: false, booking: null });
+      fetchData();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Hiba történt");
     }
   };
 
