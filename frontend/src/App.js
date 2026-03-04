@@ -2812,6 +2812,11 @@ function App() {
               <MyBookingsPage />
             </ProtectedRoute>
           } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <UserProfilePage />
+            </ProtectedRoute>
+          } />
           
           {/* Admin routes */}
           <Route path="/admin" element={
