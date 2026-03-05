@@ -186,6 +186,12 @@ class SiteSettings(BaseModel):
     sports_section_subtitle: Optional[str] = None  # "Böngéssz a sportkínálatunk..."
     footer_text: Optional[str] = None
     footer_logo: Optional[str] = None
+    # SMTP Settings
+    smtp_host: Optional[str] = None
+    smtp_port: int = 587
+    smtp_user: Optional[str] = None
+    smtp_password: Optional[str] = None
+    smtp_from: Optional[str] = None
 
 class SiteSettingsResponse(SiteSettings):
     id: str
