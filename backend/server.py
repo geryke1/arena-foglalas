@@ -623,11 +623,12 @@ async def create_guest_booking(booking_data: GuestBookingCreate):
                 <p style="color: #64748b; font-size: 12px;">Ez egy automatikus üzenet, kérjük ne válaszolj rá.</p>
             </body>
             </html>
-            """
+            """,
+            smtp_config
         )
     else:
         # Existing user - just send booking confirmation
-        send_email(
+        send_email_with_config(
             booking_data.guest_email,
             f"Foglalás megerősítve - {event['name']}",
             f"""
@@ -647,7 +648,8 @@ async def create_guest_booking(booking_data: GuestBookingCreate):
                 <p style="color: #64748b; font-size: 12px;">Ez egy automatikus üzenet, kérjük ne válaszolj rá.</p>
             </body>
             </html>
-            """
+            """,
+            smtp_config
         )
     
     # Create response with token for new users
