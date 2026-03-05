@@ -564,10 +564,10 @@ const SportEventsPage = () => {
       <Header />
       {/* Header Image */}
       <div 
-        className="relative h-64 bg-cover bg-center pt-16"
-        style={{
-          backgroundImage: `url('${getImageUrl(sport?.image_url) || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}')`
-        }}
+        className={`relative h-64 bg-cover bg-center pt-16 ${!sport?.image_url ? 'bg-gradient-to-br from-slate-800 to-slate-900' : ''}`}
+        style={sport?.image_url ? {
+          backgroundImage: `url('${getImageUrl(sport.image_url)}')`
+        } : {}}
       >
         <div className="absolute inset-0 bg-black/50" />
         <div className="absolute inset-0 flex items-center pt-16">
@@ -579,7 +579,7 @@ const SportEventsPage = () => {
             <h1 className="text-4xl font-bold text-white" style={{fontFamily: 'Manrope'}}>
               {sport?.name}
             </h1>
-            <p className="text-white/80 mt-2">{sport?.description}</p>
+            {sport?.description && <p className="text-white/80 mt-2">{sport.description}</p>}
           </div>
         </div>
       </div>
@@ -604,11 +604,15 @@ const SportEventsPage = () => {
                   data-testid={`event-card-${event.id}`}
                 >
                   <div className="relative h-40 overflow-hidden">
-                    <img 
-                      src={event.cover_image ? `${BACKEND_URL}${event.cover_image}` : sport?.image_url || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}
-                      alt={event.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                    {(event.cover_image || sport?.image_url) ? (
+                      <img 
+                        src={event.cover_image ? `${BACKEND_URL}${event.cover_image}` : getImageUrl(sport?.image_url)}
+                        alt={event.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800" />
+                    )}
                     <div className="absolute top-4 right-4">
                       <Badge className={event.current_bookings >= event.max_capacity ? 'bg-red-500' : 'bg-green-500'}>
                         {event.current_bookings >= event.max_capacity ? 'Betelt' : 'Elérhető'}
