@@ -484,17 +484,18 @@ const HomePage = () => {
                 className="object-contain" 
               />
             ) : (
-              <>
-                <Trophy className="h-8 w-8 text-[#2563EB]" />
+              settings?.site_name && (
                 <span className="font-bold text-2xl" style={{fontFamily: 'Manrope'}}>
-                  {settings?.site_name || 'Aréna'}
+                  {settings.site_name}
                 </span>
-              </>
+              )
             )}
           </div>
-          <p className="text-slate-400">
-            {settings?.footer_text || '© 2024 Aréna Sport- és Rendezvényközpont. Minden jog fenntartva.'}
-          </p>
+          {settings?.footer_text && (
+            <p className="text-slate-400">
+              {settings.footer_text}
+            </p>
+          )}
         </div>
       </footer>
     </div>
