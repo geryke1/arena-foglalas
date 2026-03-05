@@ -2512,6 +2512,257 @@ const AdminBookingsPage = () => {
   );
 };
 
+// ==================== ADMIN USERS PAGE ====================
+
+const AdminUsersPage = () => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editModal, setEditModal] = useState({ open: false, user: null });
+  const [deleteModal, setDeleteModal] = useState({ open: false, user: null });
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'user'
+  });
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get(`${API}/admin/users`);
+      setUsers(res.data);
+    } catch (e) {
+      toast.error("Hiba történt");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openEditModal = (user) => {
+    setFormData({
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      role: user.role || 'user'
+    });
+    setEditModal({ open: true, user });
+  };
+
+  const handleUpdate = async () => {
+    if (!editModal.user) return;
+    setSaving(true);
+    try {
+      await axios.put(`${API}/admin/users/${editModal.user.id}`, formData);
+      toast.success("Felhasználó frissítve");
+      setEditModal({ open: false, user: null });
+      fetchUsers();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Hiba történt");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteModal.user) return;
+    setSaving(true);
+    try {
+      await axios.delete(`${API}/admin/users/${deleteModal.user.id}`);
+      toast.success("Felhasználó törölve");
+      setDeleteModal({ open: false, user: null });
+      fetchUsers();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Hiba történt");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getRoleBadge = (role) => {
+    switch(role) {
+      case 'admin': return <Badge className="bg-red-500">Admin</Badge>;
+      case 'subadmin': return <Badge className="bg-blue-500">Subadmin</Badge>;
+      default: return <Badge variant="outline">Felhasználó</Badge>;
+    }
+  };
+
+  if (loading) return <AdminLayout><LoadingScreen /></AdminLayout>;
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900" style={{fontFamily: 'Manrope'}}>Felhasználók</h1>
+            <p className="text-slate-500 mt-1">Regisztrált felhasználók kezelése</p>
+          </div>
+          <Badge variant="outline" className="text-lg px-4 py-2">
+            {users.length} felhasználó
+          </Badge>
+        </div>
+
+        {users.length === 0 ? (
+          <Card className="p-12 text-center">
+            <Users className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 text-lg">Még nincsenek felhasználók</p>
+          </Card>
+        ) : (
+          <Card>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="text-left p-4 font-medium text-slate-600">Név</th>
+                    <th className="text-left p-4 font-medium text-slate-600">Email</th>
+                    <th className="text-left p-4 font-medium text-slate-600">Telefon</th>
+                    <th className="text-left p-4 font-medium text-slate-600">Szerepkör</th>
+                    <th className="text-left p-4 font-medium text-slate-600">Műveletek</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {users.map((u) => (
+                    <tr key={u.id} className="hover:bg-slate-50" data-testid={`user-row-${u.id}`}>
+                      <td className="p-4 font-medium">{u.name}</td>
+                      <td className="p-4 text-slate-600">{u.email}</td>
+                      <td className="p-4 text-slate-600">{u.phone || '-'}</td>
+                      <td className="p-4">{getRoleBadge(u.role)}</td>
+                      <td className="p-4">
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => openEditModal(u)}
+                            data-testid={`edit-user-${u.id}`}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-red-600 border-red-600 hover:bg-red-50"
+                            onClick={() => setDeleteModal({ open: true, user: u })}
+                            data-testid={`delete-user-${u.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
+
+        {/* Edit Modal */}
+        {editModal.open && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" data-testid="edit-user-modal">
+            <Card className="w-full max-w-md mx-4 p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Felhasználó szerkesztése</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Név</Label>
+                  <Input 
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    data-testid="edit-user-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input 
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    data-testid="edit-user-email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Telefon</Label>
+                  <Input 
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    data-testid="edit-user-phone"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Szerepkör</Label>
+                  <select 
+                    className="w-full h-10 px-3 rounded-md border border-slate-200 bg-white"
+                    value={formData.role}
+                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                    data-testid="edit-user-role"
+                  >
+                    <option value="user">Felhasználó</option>
+                    <option value="subadmin">Subadmin</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-3 justify-end mt-6">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setEditModal({ open: false, user: null })}
+                >
+                  Mégse
+                </Button>
+                <Button 
+                  className="btn-primary"
+                  onClick={handleUpdate}
+                  disabled={saving}
+                  data-testid="save-user-btn"
+                >
+                  {saving ? 'Mentés...' : 'Mentés'}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Delete Modal */}
+        {deleteModal.open && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" data-testid="delete-user-modal">
+            <Card className="w-full max-w-md mx-4 p-6">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                  <Trash2 className="h-6 w-6 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Felhasználó törlése</h3>
+                <p className="text-slate-500 mb-6">
+                  Biztosan törölni szeretnéd <strong>{deleteModal.user?.name}</strong> ({deleteModal.user?.email}) felhasználót? 
+                  <br /><br />
+                  <span className="text-red-600 font-medium">A felhasználó összes foglalása is törlődik!</span>
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setDeleteModal({ open: false, user: null })}
+                  >
+                    Mégse
+                  </Button>
+                  <Button 
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={saving}
+                    data-testid="confirm-delete-user"
+                  >
+                    {saving ? 'Törlés...' : 'Törlés'}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+      </div>
+    </AdminLayout>
+  );
+};
+
 // ==================== ADMIN SETTINGS PAGE ====================
 
 const AdminSettingsPage = () => {
