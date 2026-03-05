@@ -711,7 +711,8 @@ async def create_booking(booking_data: BookingCreate, user: dict = Depends(get_c
     await db.bookings.insert_one(booking_doc)
     
     # Send confirmation email
-    send_email(
+    smtp_config = await get_smtp_config()
+    send_email_with_config(
         user["email"],
         f"Foglalás megerősítve - {event['name']}",
         f"""
@@ -721,7 +722,8 @@ async def create_booking(booking_data: BookingCreate, user: dict = Depends(get_c
         <p><strong>Sport:</strong> {sport['name'] if sport else 'N/A'}</p>
         <p><strong>Időpont:</strong> {event['event_date']}</p>
         <p>Várunk szeretettel!</p>
-        """
+        """,
+        smtp_config
     )
     
     return BookingResponse(**booking_doc)
