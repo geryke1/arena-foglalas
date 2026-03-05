@@ -180,7 +180,10 @@ class SiteSettings(BaseModel):
     admin_panel_name: Optional[str] = None  # Admin panel name (e.g., "Admin Panel")
     hero_title: Optional[str] = None
     hero_subtitle: Optional[str] = None
+    hero_button_text: Optional[str] = None  # "Fedezd fel a sportokat"
     hero_image: Optional[str] = None
+    sports_section_title: Optional[str] = None  # "Válassz sportot"
+    sports_section_subtitle: Optional[str] = None  # "Böngéssz a sportkínálatunk..."
     footer_text: Optional[str] = None
     footer_logo: Optional[str] = None
 
