@@ -393,7 +393,7 @@ const HomePage = () => {
         <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
           {settings?.hero_title && (
             <h1 
-              className="text-4xl md:text-6xl font-bold mb-6 animate-fadeIn"
+              className="text-4xl md:text-6xl font-bold mb-6 animate-fadeIn whitespace-nowrap"
               style={{fontFamily: 'Manrope'}}
             >
               {settings.hero_title}
@@ -404,14 +404,16 @@ const HomePage = () => {
               {settings.hero_subtitle}
             </p>
           )}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeIn stagger-2">
-            <a href="#sports">
-              <Button className="btn-primary text-lg px-10 py-6" data-testid="explore-sports-btn">
-                <Activity className="mr-2 h-5 w-5" />
-                Fedezd fel a sportokat
-              </Button>
-            </a>
-          </div>
+          {settings?.hero_button_text && (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeIn stagger-2">
+              <a href="#sports">
+                <Button className="btn-primary text-lg px-10 py-6" data-testid="explore-sports-btn">
+                  <Activity className="mr-2 h-5 w-5" />
+                  {settings.hero_button_text}
+                </Button>
+              </a>
+            </div>
+          )}
         </div>
       </section>
 
@@ -419,12 +421,16 @@ const HomePage = () => {
       <section id="sports" className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{fontFamily: 'Manrope'}}>
-              Válassz sportot
-            </h2>
-            <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-              Böngéssz a sportkínálatunk között és foglalj helyet a számodra megfelelő eseményre
-            </p>
+            {settings?.sports_section_title && (
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4" style={{fontFamily: 'Manrope'}}>
+                {settings.sports_section_title}
+              </h2>
+            )}
+            {settings?.sports_section_subtitle && (
+              <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+                {settings.sports_section_subtitle}
+              </p>
+            )}
           </div>
 
           {loading ? (
