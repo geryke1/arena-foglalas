@@ -2499,7 +2499,10 @@ const AdminSettingsPage = () => {
     admin_panel_name: '',
     hero_title: '',
     hero_subtitle: '',
+    hero_button_text: '',
     hero_image: '',
+    sports_section_title: '',
+    sports_section_subtitle: '',
     footer_text: '',
     footer_logo: ''
   });
