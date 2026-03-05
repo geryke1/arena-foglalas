@@ -1318,6 +1318,7 @@ const AdminLayout = ({ children }) => {
     { icon: LayoutDashboard, label: 'Áttekintés', path: '/admin' },
     { icon: FolderOpen, label: 'Sportok', path: '/admin/sports' },
     { icon: CalendarDays, label: 'Események', path: '/admin/events' },
+    { icon: Users, label: 'Felhasználók', path: '/admin/users' },
     { icon: UserCog, label: 'Subadminok', path: '/admin/subadmins' },
     { icon: BookOpen, label: 'Foglalások', path: '/admin/bookings' },
     { icon: Settings, label: 'Beállítások', path: '/admin/settings' },
