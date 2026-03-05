@@ -460,11 +460,15 @@ const HomePage = () => {
                     data-testid={`sport-card-${sport.id}`}
                   >
                     <div className="relative h-72 overflow-hidden">
-                      <img 
-                        src={getImageUrl(sport.image_url) || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBzcG9ydHMlMjBhcmVuYSUyMGV4dGVyaW9yJTIwc3VubnklMjBkYXl8ZW58MHx8fHwxNzcyNjM5Nzc1fDA&ixlib=rb-4.1.0&q=85'}
-                        alt={sport.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                      {sport.image_url ? (
+                        <img 
+                          src={getImageUrl(sport.image_url)}
+                          alt={sport.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800" />
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                       <div className="absolute bottom-4 left-4 right-4">
                         <h3 className="text-xl font-bold text-white" style={{fontFamily: 'Manrope'}}>
@@ -473,9 +477,11 @@ const HomePage = () => {
                       </div>
                     </div>
                     <CardContent className="p-4">
-                      <p className="text-slate-600 line-clamp-2">
-                        {sport.description || 'Fedezd fel az eseményeket és foglalj helyet!'}
-                      </p>
+                      {sport.description && (
+                        <p className="text-slate-600 line-clamp-2">
+                          {sport.description}
+                        </p>
+                      )}
                       <div className="flex items-center text-[#2563EB] mt-4 font-medium">
                         <span>Események megtekintése</span>
                         <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
