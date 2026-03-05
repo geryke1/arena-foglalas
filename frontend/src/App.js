@@ -2819,6 +2819,73 @@ const AdminSettingsPage = () => {
             </CardContent>
           </Card>
 
+          {/* SMTP Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Email beállítások (SMTP)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>SMTP szerver</Label>
+                  <Input 
+                    value={settings.smtp_host || ''} 
+                    onChange={(e) => setSettings({...settings, smtp_host: e.target.value})}
+                    placeholder="pl. smtp.gmail.com"
+                    data-testid="settings-smtp-host"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>SMTP port</Label>
+                  <Input 
+                    type="number"
+                    value={settings.smtp_port || 587} 
+                    onChange={(e) => setSettings({...settings, smtp_port: parseInt(e.target.value) || 587})}
+                    placeholder="587"
+                    data-testid="settings-smtp-port"
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>SMTP felhasználónév</Label>
+                  <Input 
+                    value={settings.smtp_user || ''} 
+                    onChange={(e) => setSettings({...settings, smtp_user: e.target.value})}
+                    placeholder="pl. noreply@example.com"
+                    data-testid="settings-smtp-user"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>SMTP jelszó</Label>
+                  <Input 
+                    type="password"
+                    value={settings.smtp_password || ''} 
+                    onChange={(e) => setSettings({...settings, smtp_password: e.target.value})}
+                    placeholder="••••••••"
+                    data-testid="settings-smtp-password"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Küldő email cím</Label>
+                <Input 
+                  type="email"
+                  value={settings.smtp_from || ''} 
+                  onChange={(e) => setSettings({...settings, smtp_from: e.target.value})}
+                  placeholder="pl. noreply@example.com"
+                  data-testid="settings-smtp-from"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Ez a cím jelenik meg a kimenő emailek feladójaként
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="flex justify-end">
             <Button type="submit" className="btn-primary" disabled={saving} data-testid="settings-save-btn">
               {saving ? 'Mentés...' : 'Beállítások mentése'}
