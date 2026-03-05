@@ -434,7 +434,7 @@ const HomePage = () => {
             </div>
           ) : sports.length === 0 ? (
             <div className="text-center py-20">
-              <Trophy className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+              <FolderOpen className="h-16 w-16 text-slate-300 mx-auto mb-4" />
               <p className="text-slate-500 text-lg">Még nincsenek sportok hozzáadva</p>
             </div>
           ) : (
