@@ -13,7 +13,6 @@ import {
   Calendar, 
   Users, 
   MapPin, 
-  Trophy, 
   Activity, 
   LogOut, 
   Menu, 
