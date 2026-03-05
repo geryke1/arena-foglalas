@@ -2526,7 +2526,13 @@ const AdminSettingsPage = () => {
     sports_section_title: '',
     sports_section_subtitle: '',
     footer_text: '',
-    footer_logo: ''
+    footer_logo: '',
+    // SMTP Settings
+    smtp_host: '',
+    smtp_port: 587,
+    smtp_user: '',
+    smtp_password: '',
+    smtp_from: ''
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
