@@ -168,26 +168,28 @@ const Header = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               {settings?.site_logo ? (
-                <img 
-                  src={getImageUrl(settings.site_logo)} 
-                  alt="Logo" 
-                  style={{ height: `${Math.min(logoSize, 40)}px`, width: 'auto' }}
-                  className="object-contain sm:hidden" 
-                />
+                <>
+                  <img 
+                    src={getImageUrl(settings.site_logo)} 
+                    alt="Logo" 
+                    style={{ height: `${Math.min(logoSize, 40)}px`, width: 'auto' }}
+                    className="object-contain sm:hidden" 
+                  />
+                  <img 
+                    src={getImageUrl(settings.site_logo)} 
+                    alt="Logo" 
+                    style={{ height: `${logoSize}px`, width: 'auto' }}
+                    className="object-contain hidden sm:block" 
+                  />
+                </>
               ) : (
-                <Trophy className="h-7 w-7 sm:h-8 sm:w-8 text-[#2563EB]" />
+                <>
+                  <Trophy className="h-7 w-7 sm:h-8 sm:w-8 text-[#2563EB]" />
+                  <span className="font-bold text-lg sm:text-xl text-white hidden sm:block" style={{fontFamily: 'Manrope'}}>
+                    {settings?.site_name || 'Aréna'}
+                  </span>
+                </>
               )}
-              {settings?.site_logo && (
-                <img 
-                  src={getImageUrl(settings.site_logo)} 
-                  alt="Logo" 
-                  style={{ height: `${logoSize}px`, width: 'auto' }}
-                  className="object-contain hidden sm:block" 
-                />
-              )}
-              <span className="font-bold text-lg sm:text-xl text-white hidden sm:block" style={{fontFamily: 'Manrope'}}>
-                {settings?.site_name || 'Aréna'}
-              </span>
             </Link>
 
             {/* Desktop Menu */}
