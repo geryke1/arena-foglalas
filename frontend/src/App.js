@@ -183,12 +183,11 @@ const Header = () => {
                   />
                 </>
               ) : (
-                <>
-                  <Trophy className="h-7 w-7 sm:h-8 sm:w-8 text-[#2563EB]" />
-                  <span className="font-bold text-lg sm:text-xl text-white hidden sm:block" style={{fontFamily: 'Manrope'}}>
-                    {settings?.site_name || 'Aréna'}
+                settings?.site_name && (
+                  <span className="font-bold text-lg sm:text-xl text-white" style={{fontFamily: 'Manrope'}}>
+                    {settings.site_name}
                   </span>
-                </>
+                )
               )}
             </Link>
 
