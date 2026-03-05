@@ -749,10 +749,10 @@ const EventDetailsPage = () => {
       <Header />
       {/* Header Image */}
       <div 
-        className="relative h-80 bg-cover bg-center pt-16"
-        style={{
-          backgroundImage: `url('${getImageUrl(event?.cover_image) || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}')`
-        }}
+        className={`relative h-80 bg-cover bg-center pt-16 ${!event?.cover_image ? 'bg-gradient-to-br from-slate-800 to-slate-900' : ''}`}
+        style={event?.cover_image ? {
+          backgroundImage: `url('${getImageUrl(event.cover_image)}')`
+        } : {}}
       >
         <div className="absolute inset-0 bg-black/50" />
         <div className="absolute inset-0 flex items-end pt-16">
