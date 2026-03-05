@@ -381,20 +381,22 @@ const HomePage = () => {
     return `${BACKEND_URL}${url}`;
   };
 
-  const defaultHeroImage = 'https://images.unsplash.com/photo-1761823473903-cabb1ac05527?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBzcG9ydHMlMjBhcmVuYSUyMGV4dGVyaW9yJTIwc3VubnklMjBkYXl8ZW58MHx8fHwxNzcyNjM5Nzc1fDA&ixlib=rb-4.1.0&q=85';
-
   return (
     <div className="min-h-screen bg-white">
       <Header />
 
       {/* Hero Section */}
       <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('${getImageUrl(settings?.hero_image) || defaultHeroImage}')`
-          }}
-        />
+        {settings?.hero_image ? (
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url('${getImageUrl(settings.hero_image)}')`
+            }}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
+        )}
         <div className="absolute inset-0 hero-overlay" />
         <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
           {settings?.hero_title && (
