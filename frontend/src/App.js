@@ -354,6 +354,12 @@ const HomePage = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (settings?.site_name) {
+      document.title = settings.site_name;
+    }
+  }, [settings]);
+
   const fetchData = async () => {
     try {
       const [sportsRes, settingsRes] = await Promise.all([
