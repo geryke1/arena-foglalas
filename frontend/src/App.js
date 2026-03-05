@@ -478,13 +478,20 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             {settings?.footer_logo ? (
-              <img src={getImageUrl(settings.footer_logo)} alt="Footer Logo" className="h-8 w-8 object-contain" />
+              <img 
+                src={getImageUrl(settings.footer_logo)} 
+                alt="Footer Logo" 
+                style={{ height: `${settings?.site_logo_size || 32}px`, width: 'auto' }}
+                className="object-contain" 
+              />
             ) : (
-              <Trophy className="h-8 w-8 text-[#2563EB]" />
+              <>
+                <Trophy className="h-8 w-8 text-[#2563EB]" />
+                <span className="font-bold text-2xl" style={{fontFamily: 'Manrope'}}>
+                  {settings?.site_name || 'Aréna'}
+                </span>
+              </>
             )}
-            <span className="font-bold text-2xl" style={{fontFamily: 'Manrope'}}>
-              {settings?.site_name || 'Aréna'}
-            </span>
           </div>
           <p className="text-slate-400">
             {settings?.footer_text || '© 2024 Aréna Sport- és Rendezvényközpont. Minden jog fenntartva.'}
