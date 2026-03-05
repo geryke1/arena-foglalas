@@ -1664,18 +1664,24 @@ const AdminSportsPage = () => {
             {sports.map((sport) => (
               <Card key={sport.id} className="overflow-hidden" data-testid={`admin-sport-${sport.id}`}>
                 <div className="relative h-40">
-                  <img 
-                    src={getImageUrl(sport.image_url) || 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}
-                    alt={sport.name}
-                    className="w-full h-full object-cover"
-                  />
+                  {sport.image_url ? (
+                    <img 
+                      src={getImageUrl(sport.image_url)}
+                      alt={sport.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800" />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <h3 className="absolute bottom-4 left-4 text-xl font-bold text-white">{sport.name}</h3>
                 </div>
                 <CardContent className="p-4">
-                  <p className="text-slate-600 text-sm line-clamp-2 mb-4">
-                    {sport.description || 'Nincs leírás'}
-                  </p>
+                  {sport.description && (
+                    <p className="text-slate-600 text-sm line-clamp-2 mb-4">
+                      {sport.description}
+                    </p>
+                  )}
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => openModal(sport)} data-testid={`edit-sport-${sport.id}`}>
                       <Edit className="h-4 w-4 mr-1" />
