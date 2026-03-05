@@ -989,6 +989,12 @@ async def update_site_settings(settings_data: SiteSettings, user: dict = Depends
     
     update_data = settings_data.model_dump()
     
+    # Ensure SMTP fields are always included (even if None)
+    smtp_fields = ['smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'smtp_from']
+    for field in smtp_fields:
+        if field not in update_data:
+            update_data[field] = getattr(settings_data, field, None)
+    
     if settings:
         await db.site_settings.update_one({}, {"$set": update_data})
     else:
