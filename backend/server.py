@@ -750,7 +750,8 @@ async def cancel_booking(booking_id: str, user: dict = Depends(get_current_user)
     await db.bookings.update_one({"id": booking_id}, {"$set": {"status": "cancelled"}})
     
     # Send cancellation email
-    send_email(
+    smtp_config = await get_smtp_config()
+    send_email_with_config(
         booking["user_email"],
         f"Foglalás törölve - {booking['event_name']}",
         f"""
@@ -758,7 +759,8 @@ async def cancel_booking(booking_id: str, user: dict = Depends(get_current_user)
         <p>A következő foglalásod törölve lett:</p>
         <p><strong>Esemény:</strong> {booking['event_name']}</p>
         <p><strong>Időpont:</strong> {booking['event_date']}</p>
-        """
+        """,
+        smtp_config
     )
     
     return MessageResponse(message="Foglalás törölve")
