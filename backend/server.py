@@ -174,13 +174,14 @@ class ProfileUpdate(BaseModel):
 
 class SiteSettings(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    site_name: str = "Aréna"
+    site_name: Optional[str] = None
     site_logo: Optional[str] = None
     site_logo_size: int = 32  # Logo size in pixels (32-120)
-    hero_title: str = "Sport, Koncertek, Élmények"
-    hero_subtitle: str = "A város multifunkcionális sport- és rendezvényközpontja, 5000 fő férőhellyel"
+    admin_panel_name: Optional[str] = None  # Admin panel name (e.g., "Admin Panel")
+    hero_title: Optional[str] = None
+    hero_subtitle: Optional[str] = None
     hero_image: Optional[str] = None
-    footer_text: str = "© 2024 Aréna Sport- és Rendezvényközpont. Minden jog fenntartva."
+    footer_text: Optional[str] = None
     footer_logo: Optional[str] = None
 
 class SiteSettingsResponse(SiteSettings):
