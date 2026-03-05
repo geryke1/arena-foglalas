@@ -1005,6 +1005,73 @@ async def update_site_settings(settings_data: SiteSettings, user: dict = Depends
     logging.info(f"After save, SMTP in DB: host={updated.get('smtp_host')}, user={updated.get('smtp_user')}")
     return SiteSettingsResponse(**updated)
 
+# ==================== USER MANAGEMENT (Admin only) ====================
+
+class UserUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    role: Optional[str] = None
+    assigned_sports: Optional[List[str]] = None
+
+class UserListResponse(BaseModel):
+    id: str
+    email: str
+    name: str
+    phone: Optional[str] = None
+    role: str
+    assigned_sports: List[str] = []
+    created_at: Optional[str] = None
+
+@api_router.get("/admin/users", response_model=List[UserListResponse])
+async def get_all_users(user: dict = Depends(get_super_admin)):
+    """Get all users (admin only)"""
+    users = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    return [UserListResponse(**u) for u in users]
+
+@api_router.get("/admin/users/{user_id}", response_model=UserListResponse)
+async def get_user(user_id: str, user: dict = Depends(get_super_admin)):
+    """Get single user by ID (admin only)"""
+    target_user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Felhasználó nem található")
+    return UserListResponse(**target_user)
+
+@api_router.put("/admin/users/{user_id}", response_model=UserListResponse)
+async def update_user(user_id: str, user_data: UserUpdateRequest, user: dict = Depends(get_super_admin)):
+    """Update user (admin only)"""
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Felhasználó nem található")
+    
+    # Don't allow changing own role
+    if user_id == user["id"] and user_data.role and user_data.role != user["role"]:
+        raise HTTPException(status_code=400, detail="Saját szerepkört nem módosíthatod")
+    
+    update_data = {k: v for k, v in user_data.model_dump().items() if v is not None}
+    
+    if update_data:
+        await db.users.update_one({"id": user_id}, {"$set": update_data})
+    
+    updated_user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+    return UserListResponse(**updated_user)
+
+@api_router.delete("/admin/users/{user_id}", response_model=MessageResponse)
+async def delete_user(user_id: str, user: dict = Depends(get_super_admin)):
+    """Delete user (admin only)"""
+    if user_id == user["id"]:
+        raise HTTPException(status_code=400, detail="Saját fiókot nem törölheted")
+    
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Felhasználó nem található")
+    
+    # Delete user's bookings as well
+    await db.bookings.delete_many({"user_id": user_id})
+    await db.users.delete_one({"id": user_id})
+    
+    return {"message": "Felhasználó törölve"}
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
