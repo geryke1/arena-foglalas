@@ -392,15 +392,19 @@ const HomePage = () => {
         />
         <div className="absolute inset-0 hero-overlay" />
         <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
-          <h1 
-            className="text-4xl md:text-6xl font-bold mb-6 animate-fadeIn"
-            style={{fontFamily: 'Manrope'}}
-          >
-            {settings?.hero_title || 'Sport, Koncertek, Élmények'}
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 mb-8 animate-fadeIn stagger-1">
-            {settings?.hero_subtitle || 'A város multifunkcionális sport- és rendezvényközpontja, 5000 fő férőhellyel'}
-          </p>
+          {settings?.hero_title && (
+            <h1 
+              className="text-4xl md:text-6xl font-bold mb-6 animate-fadeIn"
+              style={{fontFamily: 'Manrope'}}
+            >
+              {settings.hero_title}
+            </h1>
+          )}
+          {settings?.hero_subtitle && (
+            <p className="text-lg md:text-xl text-white/90 mb-8 animate-fadeIn stagger-1">
+              {settings.hero_subtitle}
+            </p>
+          )}
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeIn stagger-2">
             <a href="#sports">
               <Button className="btn-primary text-lg px-10 py-6" data-testid="explore-sports-btn">
