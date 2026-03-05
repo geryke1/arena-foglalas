@@ -990,13 +990,19 @@ async def update_site_settings(settings_data: SiteSettings, user: dict = Depends
     # Include all fields, even None values
     update_data = settings_data.model_dump(exclude_none=False)
     
+    # Debug logging
+    logging.info(f"SMTP fields received: host={update_data.get('smtp_host')}, port={update_data.get('smtp_port')}, user={update_data.get('smtp_user')}, from={update_data.get('smtp_from')}")
+    logging.info(f"Full update_data keys: {list(update_data.keys())}")
+    
     if settings:
-        await db.site_settings.update_one({}, {"$set": update_data})
+        result = await db.site_settings.update_one({}, {"$set": update_data})
+        logging.info(f"Update result: matched={result.matched_count}, modified={result.modified_count}")
     else:
         update_data["id"] = "default"
         await db.site_settings.insert_one(update_data)
     
     updated = await db.site_settings.find_one({}, {"_id": 0})
+    logging.info(f"After save, SMTP in DB: host={updated.get('smtp_host')}, user={updated.get('smtp_user')}")
     return SiteSettingsResponse(**updated)
 
 # Add your routes to the router instead of directly to app
