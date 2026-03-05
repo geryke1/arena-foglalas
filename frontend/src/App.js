@@ -2653,18 +2653,18 @@ const AdminSettingsPage = () => {
               <div className="space-y-2">
                 <Label>Főcím</Label>
                 <Input 
-                  value={settings.hero_title} 
+                  value={settings.hero_title || ''} 
                   onChange={(e) => setSettings({...settings, hero_title: e.target.value})}
-                  placeholder="Sport, Koncertek, Élmények"
+                  placeholder="pl. Sport, Koncertek, Élmények"
                   data-testid="settings-hero-title"
                 />
               </div>
               <div className="space-y-2">
                 <Label>Alcím</Label>
                 <Input 
-                  value={settings.hero_subtitle} 
+                  value={settings.hero_subtitle || ''} 
                   onChange={(e) => setSettings({...settings, hero_subtitle: e.target.value})}
-                  placeholder="A város multifunkcionális sport- és rendezvényközpontja"
+                  placeholder="pl. A város multifunkcionális sport- és rendezvényközpontja"
                   data-testid="settings-hero-subtitle"
                 />
               </div>
