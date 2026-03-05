@@ -2707,9 +2707,9 @@ const AdminSettingsPage = () => {
               <div className="space-y-2">
                 <Label>Lábléc szöveg</Label>
                 <Input 
-                  value={settings.footer_text} 
+                  value={settings.footer_text || ''} 
                   onChange={(e) => setSettings({...settings, footer_text: e.target.value})}
-                  placeholder="© 2024 Aréna Sport- és Rendezvényközpont. Minden jog fenntartva."
+                  placeholder="pl. © 2024 Aréna Sport- és Rendezvényközpont. Minden jog fenntartva."
                   data-testid="settings-footer-text"
                 />
               </div>
