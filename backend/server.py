@@ -590,9 +590,12 @@ async def create_guest_booking(booking_data: GuestBookingCreate):
     }
     await db.bookings.insert_one(booking_doc)
     
+    # Get SMTP config for sending emails
+    smtp_config = await get_smtp_config()
+    
     # Send confirmation email with account info if new user
     if is_new_user:
-        send_email(
+        send_email_with_config(
             booking_data.guest_email,
             f"Foglalás megerősítve + Fiók létrehozva - {event['name']}",
             f"""
