@@ -1275,6 +1275,17 @@ const AdminLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false); // Default closed on mobile
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    axios.get(`${API}/settings`).then(res => setSettings(res.data)).catch(() => {});
+  }, []);
+
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${BACKEND_URL}${url}`;
+  };
 
   const menuItems = user?.role === 'admin' ? [
     { icon: LayoutDashboard, label: 'Áttekintés', path: '/admin' },
@@ -1314,8 +1325,15 @@ const AdminLayout = ({ children }) => {
             {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
           <div className="flex items-center gap-2">
-            <Trophy className="h-6 w-6 text-[#2563EB]" />
-            <span className="font-bold text-lg">Admin</span>
+            {settings?.site_logo ? (
+              <img 
+                src={getImageUrl(settings.site_logo)} 
+                alt="Logo" 
+                className="h-8 w-auto object-contain"
+              />
+            ) : settings?.site_name ? (
+              <span className="font-bold text-lg">{settings.site_name}</span>
+            ) : null}
           </div>
           <div className="w-10" /> {/* Spacer for centering */}
         </div>
@@ -1333,12 +1351,21 @@ const AdminLayout = ({ children }) => {
       <aside className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-slate-200 z-40 transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div className="p-6 border-b border-slate-100 hidden lg:block">
           <Link to="/" className="flex items-center gap-2">
-            <Trophy className="h-8 w-8 text-[#2563EB]" />
-            <span className="font-bold text-xl text-slate-900" style={{fontFamily: 'Manrope'}}>Aréna</span>
+            {settings?.site_logo ? (
+              <img 
+                src={getImageUrl(settings.site_logo)} 
+                alt="Logo" 
+                className="h-10 w-auto object-contain"
+              />
+            ) : settings?.site_name ? (
+              <span className="font-bold text-xl text-slate-900" style={{fontFamily: 'Manrope'}}>{settings.site_name}</span>
+            ) : null}
           </Link>
-          <Badge className="mt-3" variant="outline">
-            {user?.role === 'admin' ? 'Admin Panel' : 'Subadmin Panel'}
-          </Badge>
+          {settings?.admin_panel_name && (
+            <Badge className="mt-3" variant="outline">
+              {settings.admin_panel_name}
+            </Badge>
+          )}
         </div>
 
         {/* Mobile sidebar header */}
