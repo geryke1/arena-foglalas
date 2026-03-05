@@ -2687,6 +2687,15 @@ const AdminSettingsPage = () => {
                 />
               </div>
               <div className="space-y-2">
+                <Label>Gomb felirat</Label>
+                <Input 
+                  value={settings.hero_button_text || ''} 
+                  onChange={(e) => setSettings({...settings, hero_button_text: e.target.value})}
+                  placeholder="pl. Fedezd fel a sportokat"
+                  data-testid="settings-hero-button"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Háttérkép</Label>
                 <Input 
                   type="file"
@@ -2709,6 +2718,36 @@ const AdminSettingsPage = () => {
                     </Button>
                   </div>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sports Section Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Sportok szekció
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Szekció címe</Label>
+                <Input 
+                  value={settings.sports_section_title || ''} 
+                  onChange={(e) => setSettings({...settings, sports_section_title: e.target.value})}
+                  placeholder="pl. Válassz sportot"
+                  data-testid="settings-sports-title"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Szekció alcíme</Label>
+                <Input 
+                  value={settings.sports_section_subtitle || ''} 
+                  onChange={(e) => setSettings({...settings, sports_section_subtitle: e.target.value})}
+                  placeholder="pl. Böngéssz a sportkínálatunk között..."
+                  data-testid="settings-sports-subtitle"
+                />
               </div>
             </CardContent>
           </Card>
