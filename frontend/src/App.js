@@ -2478,13 +2478,14 @@ const AdminBookingsPage = () => {
 
 const AdminSettingsPage = () => {
   const [settings, setSettings] = useState({
-    site_name: 'Aréna',
+    site_name: '',
     site_logo: '',
     site_logo_size: 32,
-    hero_title: 'Sport, Koncertek, Élmények',
-    hero_subtitle: 'A város multifunkcionális sport- és rendezvényközpontja, 5000 fő férőhellyel',
+    admin_panel_name: '',
+    hero_title: '',
+    hero_subtitle: '',
     hero_image: '',
-    footer_text: '© 2024 Aréna Sport- és Rendezvényközpont. Minden jog fenntartva.',
+    footer_text: '',
     footer_logo: ''
   });
   const [loading, setLoading] = useState(true);
