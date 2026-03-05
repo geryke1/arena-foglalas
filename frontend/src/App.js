@@ -2634,7 +2634,6 @@ const AdminSettingsPage = () => {
                         style={{ height: `${settings.site_logo_size || 32}px` }}
                         className="object-contain"
                       />
-                      <span className="text-white font-bold">{settings.site_name || 'Aréna'}</span>
                     </div>
                   </div>
                 </div>
