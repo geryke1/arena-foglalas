@@ -2571,30 +2571,39 @@ const AdminSettingsPage = () => {
                 <div className="space-y-2">
                   <Label>Oldal neve</Label>
                   <Input 
-                    value={settings.site_name} 
+                    value={settings.site_name || ''} 
                     onChange={(e) => setSettings({...settings, site_name: e.target.value})}
-                    placeholder="Aréna"
+                    placeholder="pl. Kanizsa Aréna"
                     data-testid="settings-site-name"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Oldal logó</Label>
+                  <Label>Admin panel neve</Label>
                   <Input 
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, 'site_logo')}
-                    disabled={uploading.site_logo}
-                    data-testid="settings-site-logo-upload"
+                    value={settings.admin_panel_name || ''} 
+                    onChange={(e) => setSettings({...settings, admin_panel_name: e.target.value})}
+                    placeholder="pl. Admin Panel"
+                    data-testid="settings-admin-panel-name"
                   />
-                  {settings.site_logo && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <img src={getImageUrl(settings.site_logo)} alt="Logo" className="h-10 w-10 object-contain rounded" />
-                      <Button type="button" variant="ghost" size="sm" onClick={() => setSettings({...settings, site_logo: ''})}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Oldal logó</Label>
+                <Input 
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, 'site_logo')}
+                  disabled={uploading.site_logo}
+                  data-testid="settings-site-logo-upload"
+                />
+                {settings.site_logo && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <img src={getImageUrl(settings.site_logo)} alt="Logo" className="h-10 w-10 object-contain rounded" />
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setSettings({...settings, site_logo: ''})}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
               
               {/* Logo Size Slider */}
