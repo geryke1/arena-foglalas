@@ -1352,7 +1352,7 @@ const AdminLayout = ({ children }) => {
 
       {/* Sidebar */}
       <aside className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-slate-200 z-40 transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-        <div className="p-6 border-b border-slate-100 hidden lg:block">
+        <div className="p-6 border-b border-slate-100 hidden lg:block bg-slate-900">
           <Link to="/" className="flex items-center gap-2">
             {settings?.site_logo ? (
               <img 
@@ -1361,11 +1361,11 @@ const AdminLayout = ({ children }) => {
                 className="h-10 w-auto object-contain"
               />
             ) : settings?.site_name ? (
-              <span className="font-bold text-xl text-slate-900" style={{fontFamily: 'Manrope'}}>{settings.site_name}</span>
+              <span className="font-bold text-xl text-white" style={{fontFamily: 'Manrope'}}>{settings.site_name}</span>
             ) : null}
           </Link>
           {settings?.admin_panel_name && (
-            <Badge className="mt-3" variant="outline">
+            <Badge className="mt-3 bg-white/10 text-white border-white/20" variant="outline">
               {settings.admin_panel_name}
             </Badge>
           )}
