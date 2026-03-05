@@ -239,20 +239,51 @@ async def get_super_admin(user: dict = Depends(get_current_user)):
 
 def send_email(to_email: str, subject: str, body: str):
     """Send email via SMTP - silently fails if not configured"""
-    if not all([SMTP_HOST, SMTP_USER, SMTP_PASSWORD]):
+    import asyncio
+    
+    # Try to get SMTP settings from database first
+    async def get_smtp_settings():
+        settings = await db.site_settings.find_one({}, {"_id": 0})
+        return settings or {}
+    
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # If in async context, use environment variables as fallback
+            smtp_host = SMTP_HOST
+            smtp_port = SMTP_PORT
+            smtp_user = SMTP_USER
+            smtp_password = SMTP_PASSWORD
+            smtp_from = SMTP_FROM
+        else:
+            db_settings = loop.run_until_complete(get_smtp_settings())
+            smtp_host = db_settings.get('smtp_host') or SMTP_HOST
+            smtp_port = db_settings.get('smtp_port') or SMTP_PORT
+            smtp_user = db_settings.get('smtp_user') or SMTP_USER
+            smtp_password = db_settings.get('smtp_password') or SMTP_PASSWORD
+            smtp_from = db_settings.get('smtp_from') or SMTP_FROM
+    except:
+        # Fallback to environment variables
+        smtp_host = SMTP_HOST
+        smtp_port = SMTP_PORT
+        smtp_user = SMTP_USER
+        smtp_password = SMTP_PASSWORD
+        smtp_from = SMTP_FROM
+    
+    if not all([smtp_host, smtp_user, smtp_password]):
         logging.info(f"SMTP not configured. Would send email to {to_email}: {subject}")
         return False
     
     try:
         msg = MIMEMultipart()
-        msg['From'] = SMTP_FROM or SMTP_USER
+        msg['From'] = smtp_from or smtp_user
         msg['To'] = to_email
         msg['Subject'] = subject
         msg.attach(MIMEText(body, 'html'))
         
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
             server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.login(smtp_user, smtp_password)
             server.send_message(msg)
         return True
     except Exception as e:
