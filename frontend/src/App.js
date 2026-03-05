@@ -3556,6 +3556,11 @@ function App() {
               <AdminBookingsPage />
             </ProtectedRoute>
           } />
+          <Route path="/admin/users" element={
+            <ProtectedRoute roles={['admin']}>
+              <AdminUsersPage />
+            </ProtectedRoute>
+          } />
           <Route path="/admin/settings" element={
             <ProtectedRoute roles={['admin']}>
               <AdminSettingsPage />
