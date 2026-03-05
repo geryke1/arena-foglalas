@@ -1927,11 +1927,15 @@ const AdminEventsPage = () => {
             {events.map((event) => (
               <Card key={event.id} className="overflow-hidden" data-testid={`admin-event-${event.id}`}>
                 <div className="relative h-40">
-                  <img 
-                    src={event.cover_image ? `${BACKEND_URL}${event.cover_image}` : 'https://images.unsplash.com/photo-1761823533593-b7ee1d292202'}
-                    alt={event.name}
-                    className="w-full h-full object-cover"
-                  />
+                  {event.cover_image ? (
+                    <img 
+                      src={`${BACKEND_URL}${event.cover_image}`}
+                      alt={event.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800" />
+                  )}
                   <Badge className="absolute top-4 right-4">{event.sport_name}</Badge>
                 </div>
                 <CardContent className="p-4">
