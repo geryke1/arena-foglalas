@@ -256,8 +256,8 @@ async def get_smtp_config():
         'from_addr': SMTP_FROM
     }
 
-def send_email_sync(to_email: str, subject: str, body: str, smtp_config: dict):
-    """Send email via SMTP - synchronous version"""
+def send_email_with_config(to_email: str, subject: str, body: str, smtp_config: dict):
+    """Send email via SMTP with provided config"""
     smtp_host = smtp_config.get('host')
     smtp_port = smtp_config.get('port', 587)
     smtp_user = smtp_config.get('user')
@@ -279,32 +279,22 @@ def send_email_sync(to_email: str, subject: str, body: str, smtp_config: dict):
             server.starttls()
             server.login(smtp_user, smtp_password)
             server.send_message(msg)
+        logging.info(f"Email sent successfully to {to_email}")
         return True
     except Exception as e:
         logging.error(f"Email sending failed: {e}")
         return False
 
 def send_email(to_email: str, subject: str, body: str):
-    """Send email via SMTP using environment variables - legacy function"""
-    if not all([SMTP_HOST, SMTP_USER, SMTP_PASSWORD]):
-        logging.info(f"SMTP not configured. Would send email to {to_email}: {subject}")
-        return False
-    
-    try:
-        msg = MIMEMultipart()
-        msg['From'] = SMTP_FROM or SMTP_USER
-        msg['To'] = to_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'html'))
-        
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.send_message(msg)
-        return True
-    except Exception as e:
-        logging.error(f"Email sending failed: {e}")
-        return False
+    """Send email via SMTP using environment variables - legacy function for non-async contexts"""
+    config = {
+        'host': SMTP_HOST,
+        'port': SMTP_PORT,
+        'user': SMTP_USER,
+        'password': SMTP_PASSWORD,
+        'from_addr': SMTP_FROM
+    }
+    return send_email_with_config(to_email, subject, body, config)
 
 # ==================== AUTH ROUTES ====================
 
